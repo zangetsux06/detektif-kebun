@@ -1,26 +1,602 @@
+@import url("https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Share+Tech+Mono&family=VT323:wght@400&family=Lora:ital,wght@0,600;1,400&display=swap");
 @import "tailwindcss";
 
+/* Override Tailwind Preflight */
+html,
+:host {
+  line-height: 3;
+}
+
+/* ─── Design Tokens (Retro Pixel Art 8-Bit) ─────── */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Pixel Art Earthy Retro Palette */
+  --pixel-dark: #1a1c14;
+  --pixel-moss: #3a4428;
+  --pixel-parchment: #d4cbab;
+  --pixel-wood: #5e3c25;
+  --pixel-leaf: #4a5d23;
+  --pixel-gold: #c9a227;
+
+  /* Ambient Forest Shades (Mapped to retro colors for backward compatibility) */
+  --forest-dark: var(--pixel-dark);
+  --forest-moss: var(--pixel-moss);
+  --forest-mid: #2f3621;
+  --leaf-green: var(--pixel-leaf);
+  --leaf-light: #647c35;
+  --earth-brown: var(--pixel-wood);
+  --earth-light: #855635;
+  --gold: var(--pixel-gold);
+  --gold-light: #e2b941;
+
+  /* Nature Distilled Palette Overrides */
+  --terracotta: #a34e36;
+  --sand-beige: var(--pixel-parchment);
+  --warm-clay: #853c15;
+  --soft-cream: #e5ddc5;
+  --olive-green: var(--pixel-leaf);
+
+  /* Parchment Base Shades */
+  --parchment: var(--pixel-parchment);
+  --parchment-dark: #c4ba98;
+  --parchment-dim: #82785a;
+
+  --shadow-forest: rgba(26, 28, 20, 0.95);
+  --glow-moss: rgba(74, 93, 35, 0.4);
+  --glow-gold: rgba(201, 162, 39, 0.35);
+
+  --font-title: "Press Start 2P", cursive;
+  --font-body: "Share Tech Mono", monospace;
+  --font-prose: "VT323", monospace;
+
+  /* Blocky radius for 8-bit aesthetic */
+  --radius-sm: 0px;
+  --radius-md: 0px;
+  --radius-lg: 0px;
+  --radius-xl: 0px;
+  --radius-blob: 0px;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-pixel-dark: var(--pixel-dark);
+  --color-pixel-moss: var(--pixel-moss);
+  --color-pixel-parchment: var(--pixel-parchment);
+  --color-pixel-wood: var(--pixel-wood);
+  --color-pixel-leaf: var(--pixel-leaf);
+  --color-pixel-gold: var(--pixel-gold);
+
+  --color-forest-dark: var(--forest-dark);
+  --color-forest-moss: var(--forest-moss);
+  --color-forest-mid: var(--forest-mid);
+  --color-leaf-green: var(--leaf-green);
+  --color-leaf-light: var(--leaf-light);
+  --color-earth-brown: var(--earth-brown);
+  --color-earth-light: var(--earth-light);
+  --color-parchment: var(--parchment);
+  --color-parchment-dark: var(--parchment-dark);
+  --color-parchment-dim: var(--parchment-dim);
+  --color-gold: var(--gold);
+  --color-gold-light: var(--gold-light);
+  --color-terracotta: var(--terracotta);
+  --color-sand-beige: var(--sand-beige);
+  --color-warm-clay: var(--warm-clay);
+  --color-soft-cream: var(--soft-cream);
+  --color-olive-green: var(--olive-green);
+  --font-sans: var(--font-body);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* ─── Base ───────────────────────────────────────── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: #13170e;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%2313170e'/%3E%3Crect x='1' y='5' width='2' height='1' fill='%230f120a'/%3E%3Crect x='2' y='6' width='1' height='1' fill='%230f120a'/%3E%3Crect x='8' y='12' width='3' height='1' fill='%230f120a'/%3E%3Crect x='9' y='13' width='1' height='1' fill='%230f120a'/%3E%3Crect x='5' y='2' width='2' height='1' fill='%231a2013'/%3E%3Crect x='6' y='3' width='1' height='1' fill='%231a2013'/%3E%3Crect x='12' y='8' width='2' height='1' fill='%231a2013'/%3E%3Crect x='11' y='9' width='3' height='1' fill='%231a2013'/%3E%3Crect x='3' y='10' width='1' height='2' fill='%23222d1a'/%3E%3Crect x='2' y='11' width='3' height='1' fill='%23222d1a'/%3E%3Crect x='3' y='9' width='1' height='1' fill='%23324227'/%3E%3Crect x='13' y='3' width='1' height='2' fill='%23222d1a'/%3E%3Crect x='12' y='4' width='3' height='1' fill='%23222d1a'/%3E%3Crect x='7' y='7' width='2' height='1' fill='%232a1d13'/%3E%3Crect x='8' y='8' width='1' height='1' fill='%232a1d13'/%3E%3C/svg%3E");
+  background-size: 64px 64px;
+  color: var(--parchment);
+  font-family: var(--font-body);
+  min-height: 100vh;
+  overflow-x: hidden;
+  image-rendering: pixelated;
+}
+
+/* ─── Custom Scrollbar ───────────────────────────── */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--forest-dark);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--earth-brown);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--earth-light);
+}
+
+/* ─── Typography ─────────────────────────────────── */
+h1,
+h2,
+h3 {
+  font-family: var(--font-title);
+}
+
+/* Body prose paragraphs — bigger, easier to read */
+p, li {
+  font-size: 0.9rem;
+  line-height: 1.75;
+}
+
+/* ─── Keyframe Animations ────────────────────────── */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes leafFloat {
+  0% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  33% {
+    transform: translateY(-8px) rotate(2deg);
+  }
+  66% {
+    transform: translateY(-4px) rotate(-1deg);
+  }
+  100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+}
+
+@keyframes leafFall {
+  0% {
+    transform: translateY(-20px) translateX(0px) rotate(0deg);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.8;
+  }
+  90% {
+    opacity: 0.6;
+  }
+  100% {
+    transform: translateY(110vh) translateX(80px) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+@keyframes inkDraw {
+  from {
+    stroke-dashoffset: 1000;
+    opacity: 0;
+  }
+  to {
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% center;
+  }
+  100% {
+    background-position: 200% center;
+  }
+}
+
+@keyframes pulse-glow {
+  0%,
+  100% {
+    box-shadow:
+      0 0 8px var(--glow-moss),
+      0 0 16px var(--glow-moss);
+  }
+  50% {
+    box-shadow:
+      0 0 16px var(--glow-moss),
+      0 0 32px var(--glow-moss),
+      0 0 48px var(--glow-gold);
+  }
+}
+
+@keyframes typewriter-cursor {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+
+@keyframes ripple {
+  to {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
+
+@keyframes canvas-glow {
+  0% {
+    box-shadow:
+      inset -4px -4px 0 0 #3a2510,
+      inset 4px 4px 0 0 #855635,
+      4px 4px 0 0 rgba(0, 0, 0, 0.35);
+    border-color: var(--pixel-wood);
+  }
+  20%,
+  40% {
+    box-shadow:
+      inset -4px -4px 0 0 var(--pixel-gold),
+      inset 4px 4px 0 0 var(--pixel-gold),
+      0 0 20px 6px var(--pixel-gold),
+      4px 4px 0 0 rgba(0, 0, 0, 0.4);
+    border-color: var(--pixel-gold);
+  }
+  100% {
+    box-shadow:
+      inset -4px -4px 0 0 #3a2510,
+      inset 4px 4px 0 0 #855635,
+      4px 4px 0 0 rgba(0, 0, 0, 0.35);
+    border-color: var(--pixel-wood);
+  }
+}
+
+@keyframes float-slow {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    transform: translateY(-12px) scale(1.015);
+  }
+}
+
+@keyframes reveal-up {
+  from {
+    clip-path: inset(100% 0 0 0);
+    opacity: 0;
+  }
+  to {
+    clip-path: inset(0% 0 0 0);
+    opacity: 1;
+  }
+}
+
+@keyframes spin-slow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes bounce-gentle {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+/* ─── Utility Classes ────────────────────────────── */
+.animate-fade-in-up {
+  animation: fadeInUp 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+.animate-fade-in {
+  animation: fadeIn 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+.animate-leaf-float {
+  animation: leafFloat 5s ease-in-out infinite;
+}
+.animate-float-slow {
+  animation: float-slow 7s ease-in-out infinite;
+}
+.animate-pulse-glow {
+  animation: pulse-glow 2.5s ease-in-out infinite;
+}
+.animate-bounce-gentle {
+  animation: bounce-gentle 2.2s ease-in-out infinite;
+}
+.animate-spin-slow {
+  animation: spin-slow 24s linear infinite;
+}
+.animate-canvas-glow {
+  animation: canvas-glow 0.8s ease-out;
+}
+
+/* Delayed variants */
+.delay-100 {
+  animation-delay: 0.1s;
+}
+.delay-200 {
+  animation-delay: 0.2s;
+}
+.delay-300 {
+  animation-delay: 0.3s;
+}
+.delay-500 {
+  animation-delay: 0.5s;
+}
+.delay-700 {
+  animation-delay: 0.7s;
+}
+
+/* ─── Component Utilities ────────────────────────── */
+.card-parchment {
+  background-color: var(--pixel-parchment);
+  color: var(--pixel-dark);
+  border: 4px solid var(--pixel-wood);
+  box-shadow:
+    inset -4px -4px 0 0 #3a2510,
+    inset 4px 4px 0 0 #855635,
+    4px 4px 0 0 rgba(0, 0, 0, 0.35);
+  image-rendering: pixelated;
+  will-change: transform;
+  transform: translateZ(0);
+}
+
+.card-wood-rpg {
+  background-color: var(--pixel-parchment);
+  color: var(--pixel-dark);
+  position: relative;
+  image-rendering: pixelated;
+  border: 4px solid var(--pixel-wood);
+  box-shadow: 
+    /* Beveled wood edges - light wood top/left, dark wood bottom/right */
+    inset 4px 4px 0 0 #92623a,
+    inset -4px -4px 0 0 #3a2010,
+    /* Inner dark frame line separating wood from content */ inset 8px 8px 0 0
+      #28160a,
+    inset -8px -8px 0 0 #28160a,
+    /* Outer RPG wood border shadows */ 0 4px 0 0 #201107,
+    0 -4px 0 0 #201107,
+    4px 0 0 0 #201107,
+    -4px 0 0 0 #201107,
+    /* Outer drop shadow */ 8px 8px 0 0 rgba(0, 0, 0, 0.45);
+  will-change: transform;
+  transform: translateZ(0);
+}
+
+.card-forest {
+  background-color: var(--pixel-moss);
+  color: var(--pixel-parchment);
+  border: 4px solid var(--pixel-wood);
+  box-shadow:
+    inset -4px -4px 0 0 #1b2012,
+    inset 4px 4px 0 0 #526039,
+    4px 4px 0 0 rgba(0, 0, 0, 0.35);
+  image-rendering: pixelated;
+  will-change: transform;
+  transform: translateZ(0);
+}
+
+.btn-organic {
+  position: relative;
+  overflow: hidden;
+  background-color: var(--pixel-leaf);
+  color: var(--pixel-parchment);
+  font-family: var(--font-title);
+  font-size: 0.7rem;
+  letter-spacing: 0.05em;
+  padding: 0.75rem 1.5rem;
+  border: 4px solid var(--pixel-wood);
+  box-shadow: inset -4px -4px 0 0 rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+  image-rendering: pixelated;
+  transition: all 0.1s ease;
+}
+
+.btn-organic:hover {
+  background-color: var(--pixel-moss);
+  box-shadow:
+    inset -4px -4px 0 0 rgba(0, 0, 0, 0.4),
+    0 2px 0 0 var(--pixel-wood);
+}
+
+.btn-organic:active {
+  box-shadow: inset 4px 4px 0 0 rgba(0, 0, 0, 0.4);
+  transform: translateY(2px);
+}
+
+.btn-organic::after {
+  display: none;
+}
+
+.glow-moss {
+  box-shadow:
+    0 4px 0 0 rgba(74, 93, 35, 0.4),
+    0 -4px 0 0 rgba(74, 93, 35, 0.4),
+    4px 0 0 0 rgba(74, 93, 35, 0.4),
+    -4px 0 0 0 rgba(74, 93, 35, 0.4);
+}
+
+.glow-gold {
+  box-shadow:
+    0 4px 0 0 rgba(201, 162, 39, 0.4),
+    0 -4px 0 0 rgba(201, 162, 39, 0.4),
+    4px 0 0 0 rgba(201, 162, 39, 0.4),
+    -4px 0 0 0 rgba(201, 162, 39, 0.4);
+}
+
+.text-shimmer {
+  color: var(--pixel-gold);
+  text-shadow: 2px 2px 0px var(--pixel-wood);
+}
+
+/* ─── RPG Title Text Effect (matches UI Kit design) ─ */
+.text-rpg-title {
+  color: #f5c842;
+  /* Layered pixel drop-shadow: outline, then wood, then dark depth */
+  text-shadow:
+    /* right/bottom dark outline */
+    2px  0px 0 #3a2010,
+    -2px  0px 0 #3a2010,
+    0px  2px 0 #3a2010,
+    0px -2px 0 #3a2010,
+    /* diagonal corners */
+    2px  2px 0 #3a2010,
+    -2px  2px 0 #3a2010,
+    2px -2px 0 #3a2010,
+    -2px -2px 0 #3a2010,
+    /* wood brown mid-shadow */
+    3px  3px 0 #5e3c25,
+    /* dark depth drop */
+    5px  5px 0 rgba(10, 8, 4, 0.75);
+  letter-spacing: 0.04em;
+  line-height: 1.2;
+}
+
+/* ─── Subtitle / Tagline Style ─────────────────────── */
+.text-subtitle-pixel {
+  font-family: var(--font-body);
+  color: var(--pixel-parchment);
+  letter-spacing: 0.25em;
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  opacity: 0.75;
+}
+
+/* ─── Fun Fact Header Style ────────────────────────── */
+.text-fun-fact-header {
+  font-family: var(--font-title);
+  color: #c9a227;
+  font-size: 0.55rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  text-shadow:
+    1px 1px 0 #3a2010,
+    2px 2px 0 rgba(0,0,0,0.45);
+}
+
+/* ─── Section Label Style (Share Tech Mono) ─────────── */
+.text-section-label {
+  font-family: var(--font-body);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--pixel-parchment);
+}
+
+/* ─── Clue / Body Text Style ────────────────────────── */
+.text-riddle-body {
+  font-family: var(--font-prose);
+  font-size: 1.45rem;
+  line-height: 2.0;
+  color: var(--pixel-dark);
+}
+
+.glass-forest {
+  background-color: var(--pixel-moss);
+  color: var(--pixel-parchment);
+  border: 4px solid var(--pixel-wood);
+  box-shadow:
+    inset -4px -4px 0 0 rgba(0, 0, 0, 0.35),
+    0 4px 0 0 rgba(0, 0, 0, 0.25);
+  image-rendering: pixelated;
+  will-change: transform;
+  transform: translateZ(0);
+}
+
+.texture-parchment {
+  background-color: var(--pixel-parchment);
+}
+
+/* ─── Input Styling ──────────────────────────────── */
+.input-organic {
+  background: #ffffff;
+  color: var(--pixel-dark);
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  padding: 0.75rem 1rem;
+  border: 4px solid var(--pixel-wood);
+  outline: none;
+  width: 100%;
+}
+
+.input-organic:focus {
+  background: var(--pixel-parchment);
+  border-color: var(--pixel-leaf);
+  box-shadow: inset -4px -4px 0 0 rgba(0, 0, 0, 0.1);
+}
+
+.input-organic::placeholder {
+  color: #82785a;
+}
+
+/* ─── SVG Ink Draw Animation ─────────────────────── */
+.ink-path {
+  stroke-dasharray: 1000;
+  stroke-dashoffset: 1000;
+  animation: inkDraw 2.2s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+  fill: none;
+}
+
+/* Efek Scanline CRT untuk layar game */
+.crt-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.15) 50%);
+  background-size: 100% 4px;
+  z-index: 9999;
+  pointer-events: none;
+  transform: translateZ(0);
+  will-change: opacity;
+}
+
+/* ─── Showcase Styling (Reference: Google Stitch) ─── */
+.card-showcase-gold {
+  background-color: #12130e; /* Dark forest base */
+  color: var(--pixel-parchment);
+  border: 4px solid var(--pixel-gold);
+  position: relative;
+  image-rendering: pixelated;
+  box-shadow: 
+    inset 4px 4px 0 0 #5e3c25, /* Inner wood frame */
+    inset -4px -4px 0 0 #5e3c25,
+    6px 6px 0 0 rgba(0, 0, 0, 0.65);
+}
+
+.card-wood-dark {
+  background-color: #1a1b14;
+  color: var(--pixel-parchment);
+  border: 4px solid var(--pixel-wood);
+  position: relative;
+  image-rendering: pixelated;
+  box-shadow:
+    inset 4px 4px 0 0 #92623a, /* Light bevel */
+    inset -4px -4px 0 0 #3a2010, /* Dark bevel */
+    6px 6px 0 0 rgba(0, 0, 0, 0.55);
 }
