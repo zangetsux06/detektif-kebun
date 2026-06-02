@@ -24,7 +24,11 @@ import {
   Heart,
   Flower2,
   ChevronRight,
-  ArrowLeft
+  ArrowLeft,
+  User,
+  Edit3,
+  Check,
+  LogIn
 } from "lucide-react";
 import EyangRimba from "@/components/EyangRimba";
 import RiddleCard from "@/components/RiddleCard";
@@ -151,6 +155,15 @@ const INTRO_MESSAGES = [
   "Aku akan memberikan petunjuk, dan tugasmu adalah menebak nama tanaman yang kumaksud. Ayo kita mulai petualangan!",
 ];
 
+const PIXEL_AVATARS = [
+  { char: "🍀", label: "Daun Beruntung" },
+  { char: "🍄", label: "Jamur Hutan" },
+  { char: "🌸", label: "Teratai Indah" },
+  { char: "🪵", label: "Kayu Purba" },
+  { char: "🦊", label: "Rubah Rimba" },
+  { char: "🦉", label: "Burung Hantu Bijak" },
+];
+
 // ─── Scoring ────────────────────────────────────────────────────────────────
 const SCORE_MAP = { mudah: 10, sedang: 20, sulit: 35 };
 const MODE_MULTIPLIER: Record<string, number> = { easy: 1, normal: 2, hard: 3 };
@@ -187,6 +200,29 @@ export default function HomePage() {
   const [isSessionFailed, setIsSessionFailed]           = useState(false);
   const [gameMode, setGameMode]                         = useState<GameMode>("normal");
   const [sessionAttempts, setSessionAttempts]           = useState(0);
+
+  // User Profile States
+  interface UserProfile {
+    name: string;
+    email: string;
+    picture: string;
+    avatarType: "google" | "custom";
+    customAvatar: string;
+    title: string;
+  }
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [editingName, setEditingName] = useState("");
+  const [selectedAvatar, setSelectedAvatar] = useState("🍀");
+
+  const calculateTitle = useCallback((discoveredCount: number) => {
+    if (discoveredCount === 0) return "Detektif Pemula";
+    if (discoveredCount <= 3) return "Pencari Jejak Hutan";
+    if (discoveredCount <= 7) return "Pakar Botani Rimba";
+    if (discoveredCount <= 11) return "Ksatria Hijau";
+    if (discoveredCount <= 14) return "Pelindung Nusantara";
+    return "Eyang Rimba Agung";
+  }, []);
 
   // Special Card Reward States
   const [hasReceivedSpecialCard, setHasReceivedSpecialCard] = useState(false);
@@ -278,6 +314,138 @@ export default function HomePage() {
       setIsSessionLoaded(true);
     }
   }, []);
+
+  // Load user profile from localStorage on mount
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const savedUser = localStorage.getItem("detektif_kebun_user");
+      if (savedUser) {
+        try {
+          const profile = JSON.parse(savedUser);
+          setUserProfile(profile);
+          setEditingName(profile.name);
+          setSelectedAvatar(profile.avatarType === "google" ? "google_pic" : (profile.customAvatar || "🍀"));
+        } catch (e) {
+          console.error("Gagal mem-parse profil pengguna", e);
+        }
+      }
+    }
+  }, []);
+
+  // Update dynamic title when discovered gallery changes
+  useEffect(() => {
+    if (userProfile) {
+      const currentTitle = calculateTitle(discoveredGallery.length);
+      if (userProfile.title !== currentTitle) {
+        const updatedProfile = { ...userProfile, title: currentTitle };
+        setUserProfile(updatedProfile);
+        localStorage.setItem("detektif_kebun_user", JSON.stringify(updatedProfile));
+      }
+    }
+  }, [discoveredGallery.length, userProfile, calculateTitle]);
+
+  // Google OAuth redirect extraction
+  useEffect(() => {
+    if (typeof window !== "undefined" && window.location.hash) {
+      const hash = window.location.hash.substring(1);
+      const params = new URLSearchParams(hash);
+      const accessToken = params.get("access_token");
+      if (accessToken) {
+        window.history.replaceState(null, "", window.location.pathname);
+        
+        const fetchUserProfile = async (token: string) => {
+          setEyangMessage("Menghubungkan ke Google...");
+          setEyangMood("thinking");
+          try {
+            const res = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
+              headers: { Authorization: `Bearer ${token}` },
+            });
+            if (res.ok) {
+              const data = await res.json();
+              const profileData: UserProfile = {
+                name: data.name || "Detektif Rimba",
+                email: data.email || "",
+                picture: data.picture || "",
+                avatarType: "google",
+                customAvatar: "🍀",
+                title: calculateTitle(discoveredGallery.length),
+              };
+              setUserProfile(profileData);
+              setEditingName(profileData.name);
+              setSelectedAvatar("google_pic");
+              localStorage.setItem("detektif_kebun_user", JSON.stringify(profileData));
+              setEyangMessage(`Selamat datang kembali di rimba, Detektif ${profileData.name}! 🌟`);
+              setEyangMood("proud");
+              showLifeNotification("Login Google Berhasil! ❤️");
+            } else {
+              setEyangMessage("Gagal masuk dengan Google. Coba lagi, ya?");
+              setEyangMood("sad");
+            }
+          } catch (err) {
+            console.error("Error fetching user profile", err);
+            setEyangMessage("Ada gangguan koneksi ke Google. Coba lagi.");
+            setEyangMood("sad");
+          }
+        };
+        fetchUserProfile(accessToken);
+      }
+    }
+  }, [discoveredGallery.length, calculateTitle]);
+
+  const handleDemoLogin = () => {
+    const demoProfile: UserProfile = {
+      name: "Detektif Nusantara",
+      email: "detektif@nusantara.org",
+      picture: "",
+      avatarType: "custom",
+      customAvatar: "🦉",
+      title: calculateTitle(discoveredGallery.length),
+    };
+    setUserProfile(demoProfile);
+    setEditingName(demoProfile.name);
+    setSelectedAvatar("🦉");
+    localStorage.setItem("detektif_kebun_user", JSON.stringify(demoProfile));
+    setEyangMessage("Masuk sebagai Detektif Nusantara (Mode Demo)! 🦉");
+    setEyangMood("proud");
+    showLifeNotification("Demo Login Berhasil! ❤️");
+  };
+
+  const handleGoogleLogin = () => {
+    const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+    if (!clientId || clientId === "YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com") {
+      showLifeNotification("Demo Mode: Client ID Google belum disetel.");
+      handleDemoLogin();
+      return;
+    }
+
+    const redirectUri = window.location.origin;
+    const scope = "openid profile email";
+    const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${encodeURIComponent(clientId)}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=token&scope=${encodeURIComponent(scope)}`;
+    window.location.href = authUrl;
+  };
+
+  const handleLogout = () => {
+    setUserProfile(null);
+    localStorage.removeItem("detektif_kebun_user");
+    setEyangMessage("Kamu telah keluar. Sampai jumpa di petualangan berikutnya!");
+    setEyangMood("neutral");
+    showLifeNotification("Keluar Berhasil! 🚪");
+    setShowProfileModal(false);
+  };
+
+  const handleSaveProfile = () => {
+    if (!userProfile) return;
+    const updated: UserProfile = {
+      ...userProfile,
+      name: editingName.trim() || userProfile.name,
+      customAvatar: selectedAvatar === "google_pic" ? "🍀" : selectedAvatar,
+      avatarType: selectedAvatar === "google_pic" ? "google" : "custom"
+    };
+    setUserProfile(updated);
+    localStorage.setItem("detektif_kebun_user", JSON.stringify(updated));
+    showLifeNotification("Profil Diperbarui! 📝");
+    setShowProfileModal(false);
+  };
 
   // Save active session state to sessionStorage on any changes
   useEffect(() => {
@@ -961,6 +1129,57 @@ export default function HomePage() {
 
       {/* ── Right Main Content Area ────────────────────────────── */}
       <div className="relative z-10 flex-1 flex flex-col justify-between items-center w-full h-full pb-10 overflow-x-hidden overflow-y-auto">
+        {/* Profil / Login Badge - Top Right (Desktop) */}
+        {gamePhase === "intro" && (
+          <div className="fixed top-6 right-6 z-50 hidden lg:flex items-center gap-2">
+            {userProfile ? (
+              <motion.button
+                onClick={() => {
+                  setEditingName(userProfile.name);
+                  setSelectedAvatar(userProfile.avatarType === "google" ? "google_pic" : userProfile.customAvatar);
+                  setShowProfileModal(true);
+                }}
+                className="card-wood-rpg px-4 py-2 flex items-center gap-3.5 border-4 border-pixel-wood bg-pixel-moss hover:bg-pixel-leaf text-pixel-parchment cursor-pointer shadow-lg"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                style={{ imageRendering: "pixelated" }}
+              >
+                <div className="w-8 h-8 rounded-full border-2 border-pixel-gold bg-[#12130e] flex items-center justify-center overflow-hidden">
+                  {userProfile.avatarType === "google" && userProfile.picture ? (
+                    <img src={userProfile.picture} alt="Google Profile" className="w-full h-full object-cover" />
+                  ) : (
+                    <span className="text-lg">{userProfile.customAvatar}</span>
+                  )}
+                </div>
+                <div className="flex flex-col items-start leading-none">
+                  <span className="text-[10px] font-bold text-pixel-gold uppercase tracking-wider block" style={{ fontFamily: "var(--font-title)" }}>
+                    {userProfile.name}
+                  </span>
+                  <span className="text-[8px] font-bold opacity-75 mt-0.5" style={{ fontFamily: "var(--font-title)" }}>
+                    🏆 {userProfile.title}
+                  </span>
+                </div>
+              </motion.button>
+            ) : (
+              <motion.button
+                onClick={handleGoogleLogin}
+                className="btn-organic text-[9px] px-5 py-3 flex items-center gap-2 cursor-pointer shadow-lg"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                style={{
+                  backgroundColor: "var(--pixel-wood)",
+                  color: "#fff",
+                  fontFamily: "var(--font-title)",
+                  border: "4px solid var(--pixel-wood)",
+                }}
+              >
+                <LogIn className="w-4 h-4" />
+                <span>Masuk dengan Google</span>
+              </motion.button>
+            )}
+          </div>
+        )}
+
         {/* Floating Button Stack — Book (+ optional Lobby) */}
         <motion.div
           className="fixed top-6 z-50 hidden lg:flex flex-col"
@@ -1080,6 +1299,57 @@ export default function HomePage() {
 
         {/* Main game area */}
         <main className="flex-1 w-full max-w-4xl mx-auto px-4 pb-12 flex flex-col gap-6">
+          {/* Profil / Login Badge (Mobile) */}
+          {gamePhase === "intro" && (
+            <div className="lg:hidden w-full flex justify-end px-1 mt-2">
+              {userProfile ? (
+                <motion.button
+                  onClick={() => {
+                    setEditingName(userProfile.name);
+                    setSelectedAvatar(userProfile.avatarType === "google" ? "google_pic" : userProfile.customAvatar);
+                    setShowProfileModal(true);
+                  }}
+                  className="card-wood-rpg px-3 py-1.5 flex items-center gap-2.5 border-4 border-pixel-wood bg-pixel-moss hover:bg-pixel-leaf text-pixel-parchment cursor-pointer shadow-md"
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.97 }}
+                  style={{ imageRendering: "pixelated" }}
+                >
+                  <div className="w-6 h-6 rounded-full border-2 border-pixel-gold bg-[#12130e] flex items-center justify-center overflow-hidden">
+                    {userProfile.avatarType === "google" && userProfile.picture ? (
+                      <img src={userProfile.picture} alt="Google Profile" className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="text-sm">{userProfile.customAvatar}</span>
+                    )}
+                  </div>
+                  <div className="flex flex-col items-start leading-none">
+                    <span className="text-[9px] font-bold text-pixel-gold uppercase tracking-wider block" style={{ fontFamily: "var(--font-title)" }}>
+                      {userProfile.name}
+                    </span>
+                    <span className="text-[7px] font-bold opacity-75 mt-0.5" style={{ fontFamily: "var(--font-title)" }}>
+                      🏆 {userProfile.title}
+                    </span>
+                  </div>
+                </motion.button>
+              ) : (
+                <motion.button
+                  onClick={handleGoogleLogin}
+                  className="btn-organic text-[8px] px-3.5 py-2 flex items-center gap-1.5 cursor-pointer shadow-md"
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.97 }}
+                  style={{
+                    backgroundColor: "var(--pixel-wood)",
+                    color: "#fff",
+                    fontFamily: "var(--font-title)",
+                    border: "4px solid var(--pixel-wood)",
+                  }}
+                >
+                  <LogIn className="w-3.5 h-3.5" />
+                  <span>Masuk dengan Google</span>
+                </motion.button>
+              )}
+            </div>
+          )}
+
           {/* Eyang Rimba chat */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -1912,6 +2182,156 @@ export default function HomePage() {
           >
             <span className="text-red-500 animate-bounce">❤️</span>
             <span>{lifeNotification}</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── Profile Modal (RPG Wood Frame Design) ─── */}
+      <AnimatePresence>
+        {showProfileModal && userProfile && (
+          <motion.div
+            className="fixed inset-0 bg-black/75 backdrop-blur-xs z-[140] flex items-center justify-center p-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <motion.div
+              className="card-wood-rpg w-full max-w-md flex flex-col relative border-4 border-pixel-wood"
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              style={{ imageRendering: "pixelated" }}
+            >
+              {/* Header */}
+              <div className="px-5 py-3.5 border-b-4 border-pixel-wood bg-pixel-moss flex items-center justify-between">
+                <div className="flex items-center gap-2 text-white">
+                  <User className="w-4 h-4 text-pixel-gold" />
+                  <span className="text-section-label" style={{ fontFamily: "var(--font-title)" }}>
+                    Profil Detektif
+                  </span>
+                </div>
+                <button
+                  onClick={() => setShowProfileModal(false)}
+                  className="text-pixel-parchment hover:text-pixel-gold transition-colors cursor-pointer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Content */}
+              <div className="p-6 space-y-6 overflow-y-auto max-h-[75vh]">
+                {/* Avatar Display */}
+                <div className="flex flex-col items-center gap-3">
+                  <div className="relative w-20 h-20 rounded-full border-4 border-pixel-gold bg-[#12130e] flex items-center justify-center overflow-hidden shadow-md">
+                    {selectedAvatar === "google_pic" && userProfile.picture ? (
+                      <img src={userProfile.picture} alt="Google Profile" className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="text-4xl">{selectedAvatar}</span>
+                    )}
+                  </div>
+                  <span className="text-[10px] font-bold text-pixel-gold uppercase tracking-wider bg-pixel-dark border-2 border-pixel-wood px-3 py-1" style={{ fontFamily: "var(--font-title)" }}>
+                    🏆 {userProfile.title}
+                  </span>
+                </div>
+
+                {/* Edit Name Input */}
+                <div className="space-y-2">
+                  <label className="text-[9px] font-bold uppercase tracking-wider text-pixel-wood block" style={{ fontFamily: "var(--font-title)" }}>
+                    Nama Detektif
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={editingName}
+                      onChange={(e) => setEditingName(e.target.value)}
+                      placeholder="Masukkan nama..."
+                      className="input-organic pr-10"
+                      maxLength={18}
+                      autoComplete="off"
+                    />
+                    <Edit3 className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-pixel-wood/60" />
+                  </div>
+                </div>
+
+                {/* Avatar Selector */}
+                <div className="space-y-2.5">
+                  <label className="text-[9px] font-bold uppercase tracking-wider text-pixel-wood block" style={{ fontFamily: "var(--font-title)" }}>
+                    Pilih Avatar Spesimen
+                  </label>
+                  <div className="grid grid-cols-4 gap-2.5">
+                    {/* Google Pic option if logged in via google */}
+                    {userProfile.picture && (
+                      <button
+                        onClick={() => setSelectedAvatar("google_pic")}
+                        className={`w-12 h-12 rounded-full border-2 cursor-pointer overflow-hidden flex items-center justify-center transition-all ${
+                          selectedAvatar === "google_pic"
+                            ? "border-pixel-gold bg-pixel-moss ring-2 ring-pixel-gold"
+                            : "border-pixel-wood bg-[#12130e] hover:border-pixel-gold"
+                        }`}
+                      >
+                        <img src={userProfile.picture} alt="Google" className="w-full h-full object-cover" />
+                      </button>
+                    )}
+                    {PIXEL_AVATARS.map((av) => (
+                      <button
+                        key={av.char}
+                        onClick={() => setSelectedAvatar(av.char)}
+                        className={`w-12 h-12 rounded-full border-2 cursor-pointer flex items-center justify-center text-2xl transition-all ${
+                          selectedAvatar === av.char
+                            ? "border-pixel-gold bg-pixel-moss ring-2 ring-pixel-gold"
+                            : "border-pixel-wood bg-[#12130e] hover:border-pixel-gold"
+                        }`}
+                        title={av.label}
+                      >
+                        {av.char}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Statistics Box */}
+                <div className="p-4 border-4 border-pixel-wood bg-pixel-moss/10 space-y-2.5 rounded-xs">
+                  <h4 className="text-[9px] font-bold uppercase tracking-wider text-pixel-wood border-b-2 border-pixel-wood/25 pb-1" style={{ fontFamily: "var(--font-title)" }}>
+                    Statistik Detektif
+                  </h4>
+                  <div className="grid grid-cols-2 gap-4 text-xs font-semibold text-pixel-dark leading-none">
+                    <div className="flex flex-col gap-1">
+                      <span className="text-[8px] opacity-75 font-bold uppercase">Spesimen Ditemukan</span>
+                      <span className="text-sm font-extrabold text-pixel-gold" style={{ fontFamily: "var(--font-title)" }}>
+                        {discoveredGallery.length} / 15
+                      </span>
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <span className="text-[8px] opacity-75 font-bold uppercase">Email Terhubung</span>
+                      <span className="text-[10px] text-pixel-dark truncate" title={userProfile.email || "Tidak ada"}>
+                        {userProfile.email || "Akun Demo"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Footer Actions */}
+              <div className="px-5 py-4 border-t-4 border-pixel-wood bg-pixel-moss/5 flex items-center gap-3">
+                <motion.button
+                  onClick={handleSaveProfile}
+                  className="btn-organic flex-1 py-3 text-xs flex items-center justify-center gap-2 cursor-pointer"
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <Check className="w-4 h-4 text-white" />
+                  <span>Simpan Perubahan</span>
+                </motion.button>
+                <motion.button
+                  onClick={handleLogout}
+                  className="btn-organic py-3 px-4 text-xs flex items-center justify-center gap-2 cursor-pointer bg-red-800 border-red-800 text-white hover:bg-red-900"
+                  whileTap={{ scale: 0.95 }}
+                  title="Logout"
+                >
+                  <LogOut className="w-4 h-4 text-white" />
+                  <span>Keluar</span>
+                </motion.button>
+              </div>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
