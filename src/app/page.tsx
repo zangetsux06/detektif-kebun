@@ -196,7 +196,7 @@ export default function HomePage() {
   const [sessionQuestionIndex, setSessionQuestionIndex] = useState(1);
   const [sessionPlantsAsked, setSessionPlantsAsked]     = useState<string[]>([]);
   const [sessionDiscoveredPlants, setSessionDiscoveredPlants] = useState<string[]>([]);
-  const [isSidebarCollapsed, setIsSidebarCollapsed]     = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed]     = useState(true);
   const [isSessionFailed, setIsSessionFailed]           = useState(false);
   const [gameMode, setGameMode]                         = useState<GameMode>("normal");
   const [sessionAttempts, setSessionAttempts]           = useState(0);
@@ -407,7 +407,7 @@ export default function HomePage() {
     localStorage.setItem("detektif_kebun_user", JSON.stringify(demoProfile));
     setEyangMessage("Masuk sebagai Detektif Nusantara (Mode Demo)! 🦉");
     setEyangMood("proud");
-    showLifeNotification("Demo Login Berhasil! ❤️");
+    showLifeNotification("Berhasil Masuk!");
   };
 
   const handleGoogleLogin = () => {
@@ -1139,23 +1139,21 @@ export default function HomePage() {
                   setSelectedAvatar(userProfile.avatarType === "google" ? "google_pic" : userProfile.customAvatar);
                   setShowProfileModal(true);
                 }}
-                className="card-wood-rpg px-4 py-2 flex items-center gap-3.5 border-4 border-pixel-wood bg-pixel-moss hover:bg-pixel-leaf text-pixel-parchment cursor-pointer shadow-lg"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+                className="flex items-center gap-3 px-3 py-2 bg-[#2d1b10] border-2 border-pixel-wood hover:border-pixel-gold rounded-sm shadow-[0_4px_0_#1a0f09] hover:shadow-[0_2px_0_#1a0f09] hover:translate-y-[2px] transition-all group"
                 style={{ imageRendering: "pixelated" }}
               >
-                <div className="w-8 h-8 rounded-full border-2 border-pixel-gold bg-[#12130e] flex items-center justify-center overflow-hidden">
+                <div className="w-10 h-10 rounded-sm border-2 border-[#1a0f09] bg-[#12130e] flex items-center justify-center overflow-hidden shadow-inner group-hover:border-pixel-gold transition-colors">
                   {userProfile.avatarType === "google" && userProfile.picture ? (
                     <img src={userProfile.picture} alt="Google Profile" className="w-full h-full object-cover" />
                   ) : (
-                    <span className="text-lg">{userProfile.customAvatar}</span>
+                    <span className="text-xl drop-shadow-md">{userProfile.customAvatar}</span>
                   )}
                 </div>
-                <div className="flex flex-col items-start leading-none">
-                  <span className="text-[10px] font-bold text-pixel-gold uppercase tracking-wider block" style={{ fontFamily: "var(--font-title)" }}>
+                <div className="flex flex-col items-start leading-tight">
+                  <span className="text-[11px] font-extrabold text-[#e4d6a7] uppercase tracking-wider group-hover:text-pixel-gold transition-colors" style={{ fontFamily: "var(--font-title)" }}>
                     {userProfile.name}
                   </span>
-                  <span className="text-[8px] font-bold opacity-75 mt-0.5" style={{ fontFamily: "var(--font-title)" }}>
+                  <span className="text-[9px] font-bold text-[#8b9973] mt-0.5" style={{ fontFamily: "var(--font-title)" }}>
                     🏆 {userProfile.title}
                   </span>
                 </div>
@@ -1174,7 +1172,7 @@ export default function HomePage() {
                 }}
               >
                 <LogIn className="w-4 h-4" />
-                <span>Masuk dengan Google</span>
+                <span>Masuk</span>
               </motion.button>
             )}
           </div>
@@ -1344,7 +1342,7 @@ export default function HomePage() {
                   }}
                 >
                   <LogIn className="w-3.5 h-3.5" />
-                  <span>Masuk dengan Google</span>
+                  <span>Masuk</span>
                 </motion.button>
               )}
             </div>
@@ -2174,10 +2172,11 @@ export default function HomePage() {
       <AnimatePresence>
         {lifeNotification && (
           <motion.div
-            className="fixed top-24 left-1/2 -translate-x-1/2 z-[150] px-6 py-3.5 border-4 border-pixel-wood bg-pixel-moss text-pixel-gold font-bold text-xs uppercase tracking-wider flex items-center gap-2 shadow-[0_8px_16px_rgba(0,0,0,0.5)]"
-            initial={{ opacity: 0, y: -20, x: "-50%" }}
-            animate={{ opacity: 1, y: 0, x: "-50%" }}
-            exit={{ opacity: 0, y: -20, x: "-50%" }}
+            className="fixed top-6 right-6 z-[200] px-5 py-4 border-2 border-pixel-wood bg-[#12130e]/95 backdrop-blur-md text-pixel-gold font-bold text-[10px] uppercase tracking-widest flex items-center gap-3 shadow-[4px_4px_0_rgba(0,0,0,0.5),0_10px_25px_rgba(0,0,0,0.5)] rounded-sm"
+            initial={{ opacity: 0, x: 40, scale: 0.95 }}
+            animate={{ opacity: 1, x: 0, scale: 1 }}
+            exit={{ opacity: 0, x: 40, scale: 0.95 }}
+            transition={{ type: "spring", stiffness: 400, damping: 25 }}
             style={{ fontFamily: "var(--font-title)", imageRendering: "pixelated" }}
           >
             <span className="text-red-500 animate-bounce">❤️</span>
@@ -2219,54 +2218,56 @@ export default function HomePage() {
               </div>
 
               {/* Content */}
-              <div className="p-6 space-y-6 overflow-y-auto max-h-[75vh]">
+              <div className="flex flex-col gap-6 px-10 py-6 overflow-x-hidden overflow-y-auto max-h-[75vh] relative z-10 box-border w-full">
                 {/* Avatar Display */}
-                <div className="flex flex-col items-center gap-3">
-                  <div className="relative w-20 h-20 rounded-full border-4 border-pixel-gold bg-[#12130e] flex items-center justify-center overflow-hidden shadow-md">
+                <div className="flex flex-col items-center gap-3 mt-2">
+                  <div className="relative w-24 h-24 rounded-full border-4 border-pixel-gold bg-[#12130e] flex items-center justify-center overflow-hidden shadow-[0_0_15px_rgba(0,0,0,0.5)]">
                     {selectedAvatar === "google_pic" && userProfile.picture ? (
                       <img src={userProfile.picture} alt="Google Profile" className="w-full h-full object-cover" />
                     ) : (
-                      <span className="text-4xl">{selectedAvatar}</span>
+                      <span className="text-5xl drop-shadow-md">{selectedAvatar}</span>
                     )}
                   </div>
-                  <span className="text-[10px] font-bold text-pixel-gold uppercase tracking-wider bg-pixel-dark border-2 border-pixel-wood px-3 py-1" style={{ fontFamily: "var(--font-title)" }}>
-                    🏆 {userProfile.title}
-                  </span>
+                  <div className="bg-pixel-dark border-2 border-pixel-wood px-4 py-1.5 shadow-md">
+                    <span className="text-[11px] font-bold text-pixel-gold uppercase tracking-wider" style={{ fontFamily: "var(--font-title)" }}>
+                      🏆 {userProfile.title}
+                    </span>
+                  </div>
                 </div>
 
                 {/* Edit Name Input */}
-                <div className="space-y-2">
-                  <label className="text-[9px] font-bold uppercase tracking-wider text-pixel-wood block" style={{ fontFamily: "var(--font-title)" }}>
+                <div className="flex flex-col gap-2 w-full">
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-pixel-dark/80 block pl-6" style={{ fontFamily: "var(--font-title)" }}>
                     Nama Detektif
                   </label>
-                  <div className="relative">
+                  <div className="relative w-full box-border">
                     <input
                       type="text"
                       value={editingName}
                       onChange={(e) => setEditingName(e.target.value)}
                       placeholder="Masukkan nama..."
-                      className="input-organic pr-10"
+                      className="input-parchment pr-10 w-full box-border"
                       maxLength={18}
                       autoComplete="off"
                     />
-                    <Edit3 className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-pixel-wood/60" />
+                    <Edit3 className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#5e3c25]" />
                   </div>
                 </div>
 
                 {/* Avatar Selector */}
-                <div className="space-y-2.5">
-                  <label className="text-[9px] font-bold uppercase tracking-wider text-pixel-wood block" style={{ fontFamily: "var(--font-title)" }}>
+                <div className="flex flex-col gap-2.5 w-full">
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-pixel-dark/80 block pl-6" style={{ fontFamily: "var(--font-title)" }}>
                     Pilih Avatar Spesimen
                   </label>
-                  <div className="grid grid-cols-4 gap-2.5">
+                  <div className="flex flex-wrap gap-3 pl-4">
                     {/* Google Pic option if logged in via google */}
                     {userProfile.picture && (
                       <button
                         onClick={() => setSelectedAvatar("google_pic")}
-                        className={`w-12 h-12 rounded-full border-2 cursor-pointer overflow-hidden flex items-center justify-center transition-all ${
+                        className={`w-14 h-14 rounded-full border-2 cursor-pointer overflow-hidden flex items-center justify-center transition-all duration-300 ease-out hover:scale-110 hover:shadow-[0_0_15px_rgba(201,162,39,0.8)] hover:border-pixel-gold ${
                           selectedAvatar === "google_pic"
-                            ? "border-pixel-gold bg-pixel-moss ring-2 ring-pixel-gold"
-                            : "border-pixel-wood bg-[#12130e] hover:border-pixel-gold"
+                            ? "border-pixel-gold bg-pixel-moss ring-4 ring-pixel-gold/30 shadow-[0_0_15px_rgba(201,162,39,0.8)]"
+                            : "border-pixel-wood bg-[#12130e]"
                         }`}
                       >
                         <img src={userProfile.picture} alt="Google" className="w-full h-full object-cover" />
@@ -2276,10 +2277,10 @@ export default function HomePage() {
                       <button
                         key={av.char}
                         onClick={() => setSelectedAvatar(av.char)}
-                        className={`w-12 h-12 rounded-full border-2 cursor-pointer flex items-center justify-center text-2xl transition-all ${
+                        className={`w-14 h-14 rounded-full border-2 cursor-pointer flex items-center justify-center text-3xl transition-all duration-300 ease-out hover:scale-110 hover:shadow-[0_0_15px_rgba(201,162,39,0.8)] hover:border-pixel-gold hover:bg-[#1f2016] ${
                           selectedAvatar === av.char
-                            ? "border-pixel-gold bg-pixel-moss ring-2 ring-pixel-gold"
-                            : "border-pixel-wood bg-[#12130e] hover:border-pixel-gold"
+                            ? "border-pixel-gold bg-pixel-moss ring-4 ring-pixel-gold/30 shadow-[0_0_15px_rgba(201,162,39,0.8)]"
+                            : "border-pixel-wood bg-[#12130e]"
                         }`}
                         title={av.label}
                       >
@@ -2290,22 +2291,25 @@ export default function HomePage() {
                 </div>
 
                 {/* Statistics Box */}
-                <div className="p-4 border-4 border-pixel-wood bg-pixel-moss/10 space-y-2.5 rounded-xs">
-                  <h4 className="text-[9px] font-bold uppercase tracking-wider text-pixel-wood border-b-2 border-pixel-wood/25 pb-1" style={{ fontFamily: "var(--font-title)" }}>
+                <div className="p-4 border-4 border-pixel-wood bg-pixel-moss/10 rounded-sm flex flex-col gap-3 shadow-inner box-border w-full">
+                  <h4 className="text-[10px] font-bold uppercase tracking-wider text-pixel-dark border-b-2 border-pixel-wood/30 pb-2 pl-5" style={{ fontFamily: "var(--font-title)" }}>
                     Statistik Detektif
                   </h4>
-                  <div className="grid grid-cols-2 gap-4 text-xs font-semibold text-pixel-dark leading-none">
-                    <div className="flex flex-col gap-1">
-                      <span className="text-[8px] opacity-75 font-bold uppercase">Spesimen Ditemukan</span>
-                      <span className="text-sm font-extrabold text-pixel-gold" style={{ fontFamily: "var(--font-title)" }}>
-                        {discoveredGallery.length} / 15
-                      </span>
-                    </div>
-                    <div className="flex flex-col gap-1">
-                      <span className="text-[8px] opacity-75 font-bold uppercase">Email Terhubung</span>
-                      <span className="text-[10px] text-pixel-dark truncate" title={userProfile.email || "Tidak ada"}>
-                        {userProfile.email || "Akun Demo"}
-                      </span>
+                  <div className="flex flex-col gap-4 mt-1 w-full px-5">
+                    {/* Visual Progress Bar */}
+                    <div className="flex flex-col gap-1.5 w-full">
+                      <div className="flex justify-between items-end">
+                        <span className="text-[9px] opacity-80 font-bold uppercase text-pixel-dark">Spesimen Ditemukan</span>
+                        <span className="text-[10px] font-extrabold text-pixel-gold drop-shadow-sm" style={{ fontFamily: "var(--font-title)" }}>
+                          {discoveredGallery.length} / 15
+                        </span>
+                      </div>
+                      <div className="w-full progress-bar-wood h-3.5">
+                        <div 
+                          className="progress-bar-fill" 
+                          style={{ width: `${Math.min(100, (discoveredGallery.length / 15) * 100)}%` }}
+                        ></div>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -2315,16 +2319,18 @@ export default function HomePage() {
               <div className="px-5 py-4 border-t-4 border-pixel-wood bg-pixel-moss/5 flex items-center gap-3">
                 <motion.button
                   onClick={handleSaveProfile}
-                  className="btn-organic flex-1 py-3 text-xs flex items-center justify-center gap-2 cursor-pointer"
-                  whileTap={{ scale: 0.95 }}
+                  className="btn-organic flex-1 py-3 text-xs flex items-center justify-center gap-2 cursor-pointer shadow-lg"
+                  whileHover={{ scale: 1.03, y: -2 }}
+                  whileTap={{ scale: 0.95, y: 2 }}
                 >
                   <Check className="w-4 h-4 text-white" />
                   <span>Simpan Perubahan</span>
                 </motion.button>
                 <motion.button
                   onClick={handleLogout}
-                  className="btn-organic py-3 px-4 text-xs flex items-center justify-center gap-2 cursor-pointer bg-red-800 border-red-800 text-white hover:bg-red-900"
-                  whileTap={{ scale: 0.95 }}
+                  className="btn-organic py-3 px-4 text-xs flex items-center justify-center gap-2 cursor-pointer bg-[#7a2020] border-[#4a1010] text-[#ffcccc] shadow-lg hover:bg-[#5a1010]"
+                  whileHover={{ scale: 1.03, y: -2 }}
+                  whileTap={{ scale: 0.95, y: 2 }}
                   title="Logout"
                 >
                   <LogOut className="w-4 h-4 text-white" />
