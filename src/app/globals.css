@@ -44,7 +44,7 @@ html,
   --glow-moss: rgba(74, 93, 35, 0.4);
   --glow-gold: rgba(201, 162, 39, 0.35);
 
-  --font-title: "Press Start 2P", cursive;
+  --font-title: "Press Start 2P", monospace, sans-serif;
   --font-body: "Share Tech Mono", monospace;
   --font-prose: "VT323", monospace;
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { Trash2, Lock } from "lucide-react";
+import { PixelTrash, PixelLock } from "./PixelIcon";
 import { PLANT_ICON_MAP, getNormalizedPlantKey } from "./BotanicalCanvas";
 
 
@@ -130,8 +130,8 @@ export default function FloraCollectionModal({
                     className="mt-1 flex items-center gap-1 mx-auto text-red-300 hover:text-red-200 bg-red-950/40 hover:bg-red-900/60 border border-red-700 px-2 py-0.5 cursor-pointer transition-all"
                     style={{ fontFamily: "var(--font-body)", fontSize: "11px" }}
                   >
-                    <Trash2 className="w-3 h-3" />
-                    Reset Koleksi
+                    <PixelTrash size={12} />
+                    <span>Reset Koleksi</span>
                   </button>
                 )}
               </div>
@@ -181,7 +181,7 @@ export default function FloraCollectionModal({
                         </svg>
                       )
                     ) : (
-                      <Lock className="w-10 h-10 text-[#6b7280]" />
+                      <PixelLock size={36} />
                     );
 
                     return (

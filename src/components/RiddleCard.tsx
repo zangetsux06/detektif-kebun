@@ -2,13 +2,8 @@
 
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  Compass,
-  HelpCircle,
-  Lightbulb,
-  Loader2,
-  AlertCircle,
-} from "lucide-react";
+import { Loader2, AlertCircle } from "lucide-react";
+import { PixelCompass, PixelHelp } from "./PixelIcon";
 
 interface RiddleData {
   riddle: string;
@@ -683,7 +678,7 @@ export default function RiddleCard({
       {/* Header bar */}
       <div className="px-5 py-3 flex flex-col sm:flex-row items-center justify-between gap-3 border-b-4 border-pixel-wood bg-pixel-moss">
         <div className="flex items-center gap-2 text-white">
-          <Compass className="w-4 h-4 text-pixel-gold" />
+          <PixelCompass size={18} />
           <span
             className="text-section-label"
           >
@@ -831,10 +826,7 @@ export default function RiddleCard({
             <span>🏷️</span>
             <span>
               Huruf Awalan Spesimen:{" "}
-              <strong
-                className="text-white text-[10px] uppercase bg-pixel-wood px-2 py-0.5 border-2 border-pixel-wood ml-1"
-                style={{ fontFamily: "var(--font-title)" }}
-              >
+              <strong className="text-white text-xs font-bold uppercase bg-pixel-wood px-2 py-0.5 border-2 border-pixel-wood ml-1">
                 {riddleData.firstLetter}
               </strong>
             </span>
@@ -871,7 +863,7 @@ export default function RiddleCard({
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0 }}
                     >
-                      <HelpCircle className="w-4 h-4 flex-shrink-0 mt-0.5 text-pixel-wood" />
+                      <PixelHelp size={18} className="flex-shrink-0 mt-0.5" />
                       <div className="text-xs sm:text-sm text-pixel-dark font-medium leading-relaxed">
                         <strong
                           className="uppercase tracking-wider text-[9px] block mb-0.5 text-pixel-wood"
@@ -963,7 +955,7 @@ export default function RiddleCard({
                 </>
               ) : (
                 <>
-                  <Compass className="w-4 h-4 text-white" />
+                  <PixelCompass size={18} />
                   <span>Tebak Spesimen! ({currentLives} Nyawa)</span>
                 </>
               )}

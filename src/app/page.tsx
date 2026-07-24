@@ -30,6 +30,18 @@ import {
   Check,
   LogIn
 } from "lucide-react";
+import {
+  PixelFlame,
+  PixelTrophy,
+  PixelTarget,
+  PixelLogOut,
+  PixelSparkles,
+  PixelCheck,
+  PixelAward,
+  PixelTrees,
+  PixelSprout,
+} from "@/components/PixelIcon";
+import { PixelAvatar, PIXEL_AVATAR_LIST } from "@/components/PixelAvatar";
 import EyangRimba from "@/components/EyangRimba";
 import RiddleCard from "@/components/RiddleCard";
 import ScoreBoard from "@/components/ScoreBoard";
@@ -155,14 +167,7 @@ const INTRO_MESSAGES = [
   "Aku akan memberikan petunjuk, dan tugasmu adalah menebak nama tanaman yang kumaksud. Ayo kita mulai petualangan!",
 ];
 
-const PIXEL_AVATARS = [
-  { char: "🍀", label: "Daun Beruntung" },
-  { char: "🍄", label: "Jamur Hutan" },
-  { char: "🌸", label: "Teratai Indah" },
-  { char: "🪵", label: "Kayu Purba" },
-  { char: "🦊", label: "Rubah Rimba" },
-  { char: "🦉", label: "Burung Hantu Bijak" },
-];
+const PIXEL_AVATARS = PIXEL_AVATAR_LIST;
 
 // ─── Scoring ────────────────────────────────────────────────────────────────
 const SCORE_MAP = { mudah: 10, sedang: 20, sulit: 35 };
@@ -212,6 +217,7 @@ export default function HomePage() {
   }
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [showProfileModal, setShowProfileModal] = useState(false);
+  const [showSurrenderConfirm, setShowSurrenderConfirm] = useState(false);
   const [editingName, setEditingName] = useState("");
   const [selectedAvatar, setSelectedAvatar] = useState("🍀");
 
@@ -908,7 +914,7 @@ export default function HomePage() {
           </div>
           {streak > 0 && (
             <div className="flex items-center gap-1 text-[9px] text-pixel-gold font-bold bg-pixel-dark border-2 border-pixel-wood px-2 py-0.5">
-              <Flame className="w-3 h-3 fill-pixel-gold" />
+              <PixelFlame size={14} />
               <span style={{ fontFamily: "var(--font-title)" }}>{streak}x</span>
             </div>
           )}
@@ -1146,7 +1152,7 @@ export default function HomePage() {
                   {userProfile.avatarType === "google" && userProfile.picture ? (
                     <img src={userProfile.picture} alt="Google Profile" className="w-full h-full object-cover" />
                   ) : (
-                    <span className="text-xl drop-shadow-md">{userProfile.customAvatar}</span>
+                    <PixelAvatar char={userProfile.customAvatar} size={24} />
                   )}
                 </div>
                 <div className="flex flex-col items-start leading-tight">
@@ -1312,11 +1318,11 @@ export default function HomePage() {
                   whileTap={{ scale: 0.97 }}
                   style={{ imageRendering: "pixelated" }}
                 >
-                  <div className="w-6 h-6 rounded-full border-2 border-pixel-gold bg-[#12130e] flex items-center justify-center overflow-hidden">
+                  <div className="w-7 h-7 border-2 border-pixel-gold bg-[#12130e] flex items-center justify-center overflow-hidden p-0.5">
                     {userProfile.avatarType === "google" && userProfile.picture ? (
                       <img src={userProfile.picture} alt="Google Profile" className="w-full h-full object-cover" />
                     ) : (
-                      <span className="text-sm">{userProfile.customAvatar}</span>
+                      <PixelAvatar char={userProfile.customAvatar} size={20} />
                     )}
                   </div>
                   <div className="flex flex-col items-start leading-none">
@@ -1387,13 +1393,13 @@ export default function HomePage() {
                 </span>
               </div>
               <motion.button
-                onClick={finishGame}
-                className="flex items-center gap-1.5 px-3 py-1 border-2 border-pixel-wood bg-red-800 text-[8px] font-bold uppercase text-white hover:bg-red-900 transition-all duration-100 cursor-pointer"
+                onClick={() => setShowSurrenderConfirm(true)}
+                className="flex items-center gap-1.5 px-3 py-1 border-2 border-pixel-wood bg-red-800 text-[8px] font-bold uppercase text-white hover:bg-red-900 transition-all duration-100 cursor-pointer shadow-md"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 style={{ fontFamily: "var(--font-title)" }}
               >
-                <LogOut className="w-3.5 h-3.5 text-white" />
+                <PixelLogOut size={14} />
                 <span>Menyerah</span>
               </motion.button>
             </motion.div>
@@ -2221,11 +2227,11 @@ export default function HomePage() {
               <div className="flex flex-col gap-6 px-10 py-6 overflow-x-hidden overflow-y-auto max-h-[75vh] relative z-10 box-border w-full">
                 {/* Avatar Display */}
                 <div className="flex flex-col items-center gap-3 mt-2">
-                  <div className="relative w-24 h-24 rounded-full border-4 border-pixel-gold bg-[#12130e] flex items-center justify-center overflow-hidden shadow-[0_0_15px_rgba(0,0,0,0.5)]">
+                  <div className="relative w-20 h-20 border-4 border-pixel-gold bg-[#12130e] flex items-center justify-center overflow-hidden p-1 shadow-[0_0_15px_rgba(0,0,0,0.5)]" style={{ imageRendering: "pixelated" }}>
                     {selectedAvatar === "google_pic" && userProfile.picture ? (
                       <img src={userProfile.picture} alt="Google Profile" className="w-full h-full object-cover" />
                     ) : (
-                      <span className="text-5xl drop-shadow-md">{selectedAvatar}</span>
+                      <PixelAvatar char={selectedAvatar} size={48} />
                     )}
                   </div>
                   <div className="bg-pixel-dark border-2 border-pixel-wood px-4 py-1.5 shadow-md">
@@ -2257,36 +2263,42 @@ export default function HomePage() {
                 {/* Avatar Selector */}
                 <div className="flex flex-col gap-2.5 w-full">
                   <label className="text-[10px] font-bold uppercase tracking-wider text-pixel-dark/80 block pl-6" style={{ fontFamily: "var(--font-title)" }}>
-                    Pilih Avatar Spesimen
+                    Pilih Avatar Spesimen (8-Bit)
                   </label>
                   <div className="flex flex-wrap gap-3 pl-4">
                     {/* Google Pic option if logged in via google */}
                     {userProfile.picture && (
                       <button
                         onClick={() => setSelectedAvatar("google_pic")}
-                        className={`w-14 h-14 rounded-full border-2 cursor-pointer overflow-hidden flex items-center justify-center transition-all duration-300 ease-out hover:scale-110 hover:shadow-[0_0_15px_rgba(201,162,39,0.8)] hover:border-pixel-gold ${
+                        className={`w-14 h-14 border-4 cursor-pointer overflow-hidden flex items-center justify-center p-0.5 transition-all duration-150 ease-out hover:scale-105 ${
                           selectedAvatar === "google_pic"
-                            ? "border-pixel-gold bg-pixel-moss ring-4 ring-pixel-gold/30 shadow-[0_0_15px_rgba(201,162,39,0.8)]"
-                            : "border-pixel-wood bg-[#12130e]"
+                            ? "border-pixel-gold bg-pixel-moss shadow-[0_0_15px_rgba(201,162,39,0.8)] ring-2 ring-pixel-gold/40"
+                            : "border-pixel-wood bg-[#12130e] hover:border-pixel-gold/70"
                         }`}
+                        style={{ imageRendering: "pixelated" }}
+                        title="Foto Google"
                       >
                         <img src={userProfile.picture} alt="Google" className="w-full h-full object-cover" />
                       </button>
                     )}
-                    {PIXEL_AVATARS.map((av) => (
-                      <button
-                        key={av.char}
-                        onClick={() => setSelectedAvatar(av.char)}
-                        className={`w-14 h-14 rounded-full border-2 cursor-pointer flex items-center justify-center text-3xl transition-all duration-300 ease-out hover:scale-110 hover:shadow-[0_0_15px_rgba(201,162,39,0.8)] hover:border-pixel-gold hover:bg-[#1f2016] ${
-                          selectedAvatar === av.char
-                            ? "border-pixel-gold bg-pixel-moss ring-4 ring-pixel-gold/30 shadow-[0_0_15px_rgba(201,162,39,0.8)]"
-                            : "border-pixel-wood bg-[#12130e]"
-                        }`}
-                        title={av.label}
-                      >
-                        {av.char}
-                      </button>
-                    ))}
+                    {PIXEL_AVATARS.map((av) => {
+                      const isSelected = selectedAvatar === av.char || selectedAvatar === av.id;
+                      return (
+                        <button
+                          key={av.id || av.char}
+                          onClick={() => setSelectedAvatar(av.char)}
+                          className={`w-14 h-14 border-4 cursor-pointer flex items-center justify-center p-2 transition-all duration-150 ease-out hover:scale-105 ${
+                            isSelected
+                              ? "border-pixel-gold bg-pixel-moss shadow-[0_0_15px_rgba(201,162,39,0.8)] ring-2 ring-pixel-gold/40"
+                              : "border-pixel-wood bg-[#12130e] hover:border-pixel-gold/70 hover:bg-[#1c1e14]"
+                          }`}
+                          style={{ imageRendering: "pixelated" }}
+                          title={av.label}
+                        >
+                          <PixelAvatar id={av.id} char={av.char} size={32} />
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
 
@@ -2339,6 +2351,60 @@ export default function HomePage() {
               </div>
             </motion.div>
           </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── Double Confirmation Modal for Menyerah ───────────────────── */}
+      <AnimatePresence>
+        {showSurrenderConfirm && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/75 backdrop-blur-xs">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 15 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 15 }}
+              className="card-showcase-gold p-4 max-w-sm w-full relative text-center shadow-2xl"
+              style={{ imageRendering: "pixelated" }}
+            >
+              <div className="card-parchment w-full p-5 text-pixel-dark flex flex-col items-center gap-3 relative">
+                <div className="w-12 h-12 bg-red-900 border-2 border-pixel-wood flex items-center justify-center shadow-inner">
+                  <PixelLogOut size={26} />
+                </div>
+
+                <h3 className="text-xs font-bold text-red-900 uppercase tracking-widest" style={{ fontFamily: "var(--font-title)" }}>
+                  Konfirmasi Menyerah
+                </h3>
+
+                <p className="text-xs font-semibold text-pixel-dark leading-relaxed" style={{ fontFamily: "var(--font-body)" }}>
+                  Apakah kamu yakin ingin menyerah dari investigasi ini, Detektif? Progres sesi teka-teki saat ini akan dihentikan.
+                </p>
+
+                <div className="flex items-center justify-center gap-3 w-full mt-2">
+                  <motion.button
+                    onClick={() => setShowSurrenderConfirm(false)}
+                    className="flex-1 py-2.5 px-3 border-2 border-pixel-wood bg-pixel-moss text-pixel-parchment hover:bg-pixel-leaf text-[9px] font-bold uppercase cursor-pointer shadow-md"
+                    whileHover={{ scale: 1.03 }}
+                    whileTap={{ scale: 0.97 }}
+                    style={{ fontFamily: "var(--font-title)" }}
+                  >
+                    Batal
+                  </motion.button>
+
+                  <motion.button
+                    onClick={() => {
+                      setShowSurrenderConfirm(false);
+                      finishGame();
+                    }}
+                    className="flex-1 py-2.5 px-3 border-2 border-pixel-wood bg-red-800 text-white hover:bg-red-900 text-[9px] font-bold uppercase cursor-pointer shadow-md"
+                    whileHover={{ scale: 1.03 }}
+                    whileTap={{ scale: 0.97 }}
+                    style={{ fontFamily: "var(--font-title)" }}
+                  >
+                    Ya, Menyerah
+                  </motion.button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
         )}
       </AnimatePresence>
     </div>

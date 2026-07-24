@@ -1,7 +1,16 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Trophy, Flame, Target, CheckCircle2, Sprout, Trees, Flower2, Award } from "lucide-react";
+import { 
+  PixelTrophy, 
+  PixelFlame, 
+  PixelTarget, 
+  PixelCheck, 
+  PixelSprout, 
+  PixelTrees, 
+  PixelFlower, 
+  PixelAward 
+} from "./PixelIcon";
 
 interface ScoreBoardProps {
   score: number;
@@ -11,11 +20,11 @@ interface ScoreBoardProps {
 }
 
 const BADGES = [
-  { id: "first-win",    label: "Detektif Pemula",  icon: Sprout, color: "#10b981", condition: (c: number) => c >= 1  },
-  { id: "three-streak", label: "Jejak Hijau",       icon: Flame, color: "#f97316", condition: (_: number, s: number) => s >= 3 },
-  { id: "five-correct", label: "Penjaga Hutan",     icon: Trees, color: "#22c55e", condition: (c: number) => c >= 5  },
-  { id: "ten-correct",  label: "Ahli Botani Muda",  icon: Flower2, color: "#ec4899", condition: (c: number) => c >= 10 },
-  { id: "perfect",      label: "Eyang Rimba Jr.",   icon: Trophy, color: "#eab308", condition: (c: number) => c >= 20 },
+  { id: "first-win",    label: "Detektif Pemula",  icon: PixelSprout, color: "#10b981", condition: (c: number) => c >= 1  },
+  { id: "three-streak", label: "Jejak Hijau",       icon: PixelFlame, color: "#f97316", condition: (_: number, s: number) => s >= 3 },
+  { id: "five-correct", label: "Penjaga Hutan",     icon: PixelTrees, color: "#22c55e", condition: (c: number) => c >= 5  },
+  { id: "ten-correct",  label: "Ahli Botani Muda",  icon: PixelFlower, color: "#ec4899", condition: (c: number) => c >= 10 },
+  { id: "perfect",      label: "Eyang Rimba Jr.",   icon: PixelTrophy, color: "#eab308", condition: (c: number) => c >= 20 },
 ];
 
 export default function ScoreBoard({ score, streak, totalCorrect, totalAttempted }: ScoreBoardProps) {
@@ -33,7 +42,7 @@ export default function ScoreBoard({ score, streak, totalCorrect, totalAttempted
       {/* Score Section */}
       <div className="text-center space-y-1">
         <div className="flex items-center justify-center gap-1.5">
-          <Trophy className="w-4 h-4 text-pixel-gold" />
+          <PixelTrophy size={18} />
           <p className="text-[10px] tracking-widest uppercase font-bold text-pixel-parchment" style={{ fontFamily: "var(--font-title)" }}>
             Skor Pemain
           </p>
@@ -58,19 +67,19 @@ export default function ScoreBoard({ score, streak, totalCorrect, totalAttempted
         <StatCell
           label="Benar"
           value={totalCorrect}
-          icon={<CheckCircle2 className="w-4 h-4 text-emerald-400" />}
+          icon={<PixelCheck size={18} />}
           color="var(--pixel-leaf)"
         />
         <StatCell
           label="Streak"
           value={streak}
-          icon={<Flame className="w-4 h-4 text-amber-500" />}
+          icon={<PixelFlame size={18} />}
           color="var(--pixel-gold)"
         />
         <StatCell
           label="Akurasi"
           value={`${accuracy}%`}
-          icon={<Target className="w-4 h-4 text-rose-400" />}
+          icon={<PixelTarget size={18} />}
           color="var(--terracotta)"
         />
       </div>
@@ -100,7 +109,7 @@ export default function ScoreBoard({ score, streak, totalCorrect, totalAttempted
       {earnedBadges.length > 0 && (
         <div className="space-y-2">
           <div className="flex items-center gap-1.5">
-            <Award className="w-3.5 h-3.5 text-pixel-gold" />
+            <PixelAward size={16} />
             <p className="text-[10px] tracking-widest uppercase font-bold text-pixel-parchment" style={{ fontFamily: "var(--font-title)" }}>
               Lencana
             </p>
@@ -120,7 +129,7 @@ export default function ScoreBoard({ score, streak, totalCorrect, totalAttempted
                   transition={{ delay: i * 0.08 }}
                   title={badge.label}
                 >
-                  <BadgeIcon className="w-3.5 h-3.5" style={{ color: badge.color }} />
+                  <BadgeIcon size={14} />
                   <span className="text-[8px] font-bold uppercase tracking-wider text-pixel-parchment" style={{ fontFamily: "var(--font-title)" }}>
                     {badge.label}
                   </span>
