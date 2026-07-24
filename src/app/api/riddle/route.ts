@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { generateWithCascade } from "@/lib/gemini";
-import { LOCAL_RIDDLES } from "@/lib/riddles";
+import { LOCAL_RIDDLES, getPlantFirstLetter } from "@/lib/riddles";
 export { LOCAL_RIDDLES };
 
 export const dynamic = "force-dynamic";
@@ -13,11 +13,6 @@ const FLORA_POOL = [
   "Pohon Meranti", "Pohon Gaharu", "Rotan", "Teratai Raksasa (Nymphaea)",
   "Pohon Pinus Merkusi", "Buah Merah Papua", "Daun Sirih", "Pohon Sagu"
 ];
-
-function getPlantFirstLetter(plantName: string): string {
-  const cleanName = plantName.replace(/[()]/g, "").trim();
-  return cleanName.charAt(0).toUpperCase() || "A";
-}
 
 export function scrubSpoilers(text: string, plantName: string): string {
   if (!text) return text;

@@ -167,6 +167,28 @@ export const LOCAL_RIDDLES: LocalRiddle[] = [
   }
 ];
 
+export function getPlantFirstLetter(plantName: string): string {
+  if (!plantName) return "A";
+  
+  // Remove parenthetical scientific names, e.g. "Pohon Ulin (Kayu Besi)" -> "Pohon Ulin"
+  const cleanName = plantName.replace(/\(.*?\)/g, "").replace(/[()]/g, "").trim();
+  
+  // Split into words
+  const words = cleanName.split(/\s+/).filter(Boolean);
+  if (words.length === 0) return "A";
+  
+  // Generic prefix words to skip if there are additional words (e.g. Pohon Gaharu -> Gaharu)
+  const prefixesToSkip = new Set(["pohon", "bunga", "tanaman", "kayu"]);
+  
+  let targetWord = words[0];
+  if (words.length > 1 && prefixesToSkip.has(words[0].toLowerCase())) {
+    targetWord = words[1];
+  }
+  
+  const firstChar = targetWord.charAt(0).toUpperCase();
+  return /[A-Z0-9]/.test(firstChar) ? firstChar : "A";
+}
+
 export function getClientFallbackRiddle(excludedPlants: string[] = []) {
   const excludedLower = excludedPlants.map((p) => p.toLowerCase());
   let available = LOCAL_RIDDLES.filter(
@@ -176,7 +198,7 @@ export function getClientFallbackRiddle(excludedPlants: string[] = []) {
     available = LOCAL_RIDDLES;
   }
   const fallback = available[Math.floor(Math.random() * available.length)];
-  const firstLetter = fallback.plantName.charAt(0).toUpperCase() || "A";
+  const firstLetter = getPlantFirstLetter(fallback.plantName);
   const encodedPlant = Buffer.from(fallback.plantName).toString("base64");
 
   return {

@@ -400,26 +400,19 @@ export default function RiddleCard({
     handleTimeoutRef.current = handleTimeout;
   }, [handleTimeout]);
 
+  const currentRiddleIdRef = useRef<string | null>(null);
+
   // Timer Tick Effect
   useEffect(() => {
-    console.log("RiddleCard timer tick effect triggered. isTimeStoppedForNextQuestion:", isTimeStoppedForNextQuestion, "isLoading:", isLoading, "isCorrect:", isCorrect, "isGameOver:", isGameOver);
     if (gameMode === "easy" || isTimeStoppedForNextQuestion || isCorrect || isGameOver || isLoading || !riddleData) {
-      console.log("RiddleCard timer tick effect returning early (no tick started).");
       return;
     }
 
-    console.log("RiddleCard timer tick effect starting interval. timeLeft:", timeLeft);
     const interval = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev <= 1) {
-          return 0;
-        }
-        return prev - 1;
-      });
+      setTimeLeft((prev) => (prev > 0 ? prev - 1 : 0));
     }, 1000);
 
     return () => {
-      console.log("RiddleCard timer tick effect clearing interval.");
       clearInterval(interval);
     };
   }, [riddleData?.id, isCorrect, isGameOver, isLoading, gameMode, isTimeStoppedForNextQuestion]);
@@ -447,44 +440,46 @@ export default function RiddleCard({
     }
   }, [timeLeft, gameMode, isCorrect, isGameOver, isLoading, riddleData, isTimeStoppedForNextQuestion]);
 
-
-
+  // Question Reset & Typewriter Effect
   useEffect(() => {
-    if (isCorrect) return; // Prevent resetting states when the guess is correct
+    if (isCorrect || !riddleData?.id) return;
 
-    setAnswer("");
-    if (gameMode !== "hard") {
-      setAttempts(0);
-    }
-    setQuestionAttempts(0);
-    setLastWrong(false);
-    setIsGameOver(false);
-    setIsFailedEasy(false);
-    setIsFailedQuestion(false);
-    setRevealedPlantName("");
-    setTimeLeft(gameMode === "hard" ? 30 : 60);
-    setTimeout(() => inputRef.current?.focus(), 400);
+    if (currentRiddleIdRef.current !== riddleData.id) {
+      currentRiddleIdRef.current = riddleData.id;
+      setAnswer("");
+      if (gameMode !== "hard") {
+        setAttempts(0);
+      }
+      setQuestionAttempts(0);
+      setLastWrong(false);
+      setIsGameOver(false);
+      setIsFailedEasy(false);
+      setIsFailedQuestion(false);
+      setRevealedPlantName("");
+      setTimeLeft(gameMode === "hard" ? 30 : 60);
+      setTimeout(() => inputRef.current?.focus(), 400);
 
-    if (!riddleData?.riddle) {
+      if (!riddleData?.riddle) {
+        setDisplayedRiddle("");
+        setIsTypingRiddle(false);
+        return;
+      }
       setDisplayedRiddle("");
-      setIsTypingRiddle(false);
-      return;
-    }
-    setDisplayedRiddle("");
-    setIsTypingRiddle(true);
-    let i = 0;
-    const interval = setInterval(() => {
-      setDisplayedRiddle(riddleData.riddle.slice(0, i + 1));
-      i++;
-      if (i >= riddleData.riddle.length) {
+      setIsTypingRiddle(true);
+      let i = 0;
+      const interval = setInterval(() => {
+        setDisplayedRiddle(riddleData.riddle.slice(0, i + 1));
+        i++;
+        if (i >= riddleData.riddle.length) {
+          clearInterval(interval);
+          setIsTypingRiddle(false);
+        }
+      }, 18);
+      return () => {
         clearInterval(interval);
         setIsTypingRiddle(false);
-      }
-    }, 18); // typing speed
-    return () => {
-      clearInterval(interval);
-      setIsTypingRiddle(false);
-    };
+      };
+    }
   }, [riddleData?.id, riddleData?.riddle, isCorrect, gameMode]);
 
   const handleRipple = (e: React.MouseEvent<HTMLButtonElement>) => {
