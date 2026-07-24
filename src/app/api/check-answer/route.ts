@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getGeminiModelJSON } from "@/lib/gemini";
-import { LOCAL_RIDDLES } from "../riddle/route";
+import { LOCAL_RIDDLES } from "@/lib/riddles";
 
 interface CheckAnswerRequest {
   answer: string;

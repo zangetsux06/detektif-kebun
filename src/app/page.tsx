@@ -42,6 +42,7 @@ import {
   PixelSprout,
 } from "@/components/PixelIcon";
 import { PixelAvatar, PIXEL_AVATAR_LIST } from "@/components/PixelAvatar";
+import { getClientFallbackRiddle } from "@/lib/riddles";
 import EyangRimba from "@/components/EyangRimba";
 import RiddleCard from "@/components/RiddleCard";
 import ScoreBoard from "@/components/ScoreBoard";
@@ -249,6 +250,67 @@ export default function HomePage() {
   const isGameActive = gamePhase === "playing" || gamePhase === "correct";
   const [isSessionLoaded, setIsSessionLoaded] = useState(false);
 
+  // ─── Fetching Riddle Data ──────────────────────────────────────────────────
+  const fetchRiddle = useCallback(async (currentSessionPlants: string[]) => {
+    setIsLoading(true);
+    setIsEyangTyping(true);
+    setEyangMessage("");
+    setCheckResult(null);
+
+    const excludeQuery = currentSessionPlants.map(encodeURIComponent).join(",");
+    const url = excludeQuery ? `/api/riddle?exclude=${excludeQuery}` : "/api/riddle";
+
+    try {
+      const res = await fetch(url, { cache: "no-store" });
+      if (!res.ok) throw new Error(`HTTP Error status ${res.status}`);
+
+      const data: RiddleData = await res.json();
+      if (!data || !data.riddle || typeof data.riddle !== "string" || !data.riddle.trim()) {
+        throw new Error("Respons teka-teki dari server kosong.");
+      }
+
+      setRiddleData(data);
+
+      if (data.encodedPlant) {
+        try {
+          const plantName = atob(data.encodedPlant);
+          setSessionPlantsAsked((prev) => {
+            if (prev.includes(plantName)) return prev;
+            return [...prev, plantName];
+          });
+        } catch (e) {
+          console.warn("Gagal atob encodedPlant:", e);
+        }
+      }
+
+      setEyangMessage("Baiklah, Nak... dengarkan baik-baik teka-tekiku ini. Apa gerangan namanya?");
+      setEyangMood("thinking");
+    } catch (err) {
+      console.warn("⚠️ Gagal memuat teka-teki dari API, menggunakan Fallback Lokal Client:", err);
+      const fallbackData = getClientFallbackRiddle(currentSessionPlants);
+      setRiddleData(fallbackData);
+
+      if (fallbackData.encodedPlant) {
+        try {
+          const plantName = atob(fallbackData.encodedPlant);
+          setSessionPlantsAsked((prev) => {
+            if (prev.includes(plantName)) return prev;
+            return [...prev, plantName];
+          });
+        } catch (e) {
+          console.warn("Gagal atob encodedPlant:", e);
+        }
+      }
+
+      setEyangMessage("Eyang merapalkan mantra purba untuk memunculkan teka-teki dari Kitab Hutan Rimba!");
+      setEyangMood("excited");
+    } finally {
+      setIsLoading(false);
+      setIsEyangTyping(false);
+      isTransitioningRef.current = false;
+    }
+  }, []);
+
   // ─── Pre-fetching the Next Riddle ─────────────────────────────────────────
   const prefetchNextRiddle = useCallback(async (currentSessionPlants: string[]) => {
     if (isPrefetching) return;
@@ -259,10 +321,16 @@ export default function HomePage() {
 
     try {
       const res = await fetch(url, { cache: "no-store" });
+      if (!res.ok) throw new Error("Prefetch HTTP error");
       const data: RiddleData = await res.json();
-      setPrefetchedRiddle(data);
+      if (data && data.riddle && typeof data.riddle === "string" && data.riddle.trim()) {
+        setPrefetchedRiddle(data);
+      } else {
+        setPrefetchedRiddle(getClientFallbackRiddle(currentSessionPlants));
+      }
     } catch (e) {
-      console.warn("⚠️ Gagal mem-prefetch teka-teki berikutnya:", e);
+      console.warn("⚠️ Gagal mem-prefetch teka-teki berikutnya, menggunakan fallback:", e);
+      setPrefetchedRiddle(getClientFallbackRiddle(currentSessionPlants));
     } finally {
       setIsPrefetching(false);
     }
@@ -281,6 +349,16 @@ export default function HomePage() {
       prefetchNextRiddle(sessionPlantsAsked);
     }
   }, [isSessionLoaded, gamePhase, riddleData?.id, prefetchedRiddle, isPrefetching, sessionPlantsAsked, prefetchNextRiddle]);
+
+  // 3. Ensure riddleData is valid when in playing phase (e.g. after browser refresh or broken fetch)
+  useEffect(() => {
+    if (isSessionLoaded && (gamePhase === "playing" || gamePhase === "correct")) {
+      if (!riddleData || !riddleData.riddle || typeof riddleData.riddle !== "string" || !riddleData.riddle.trim()) {
+        console.warn("⚠️ Sesi aktif tidak memiliki data soal valid. Memuat teka-teki baru...");
+        fetchRiddle(sessionPlantsAsked);
+      }
+    }
+  }, [isSessionLoaded, gamePhase, riddleData, fetchRiddle, sessionPlantsAsked]);
 
   // ─── Hydration from sessionStorage (Game Session) ──────────────────────────
   useEffect(() => {
@@ -570,37 +648,7 @@ export default function HomePage() {
     }
   };
 
-  const fetchRiddle = useCallback(async (currentSessionPlants: string[]) => {
-    setIsLoading(true);
-    setIsEyangTyping(true);
-    setEyangMessage("");
-    setCheckResult(null);
 
-    const excludeQuery = currentSessionPlants.map(encodeURIComponent).join(",");
-    const url = excludeQuery ? `/api/riddle?exclude=${excludeQuery}` : "/api/riddle";
-
-    try {
-      const res = await fetch(url, { cache: "no-store" });
-      const data: RiddleData = await res.json();
-      setRiddleData(data);
-
-      const plantName = atob(data.encodedPlant);
-      setSessionPlantsAsked((prev) => {
-        if (prev.includes(plantName)) return prev;
-        return [...prev, plantName];
-      });
-
-      setEyangMessage("Baiklah, Nak... dengarkan baik-baik teka-tekiku ini. Apa gerangan namanya?");
-      setEyangMood("thinking");
-    } catch {
-      setEyangMessage("Maaf, sepertinya ada kabut tebal di hutan. Coba lagi ya, Nak...");
-      setEyangMood("sad");
-    } finally {
-      setIsLoading(false);
-      setIsEyangTyping(false);
-      isTransitioningRef.current = false;
-    }
-  }, []);
 
   const startGame = (mode: GameMode = "normal") => {
     setGameMode(mode);

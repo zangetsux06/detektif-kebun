@@ -809,7 +809,7 @@ export default function RiddleCard({
           <p
             className="text-riddle-body leading-loose"
           >
-            &ldquo;{displayedRiddle}
+            &ldquo;{displayedRiddle || riddleData?.riddle || "Merapalkan teka-teki..."}
             {isTypingRiddle && (
               <span
                 className="inline-block ml-1 w-2.5 h-4.5 align-middle bg-pixel-gold"
