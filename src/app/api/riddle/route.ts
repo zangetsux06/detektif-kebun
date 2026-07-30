@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { generateWithCascade } from "@/lib/gemini";
+import { generateWithCascade, formatGeminiErrorSummary } from "@/lib/gemini";
 import { LOCAL_RIDDLES, getPlantFirstLetter } from "@/lib/riddles";
 export { LOCAL_RIDDLES };
 
@@ -102,7 +102,7 @@ PENTING:
 `;
 
     const timeoutPromise = new Promise<never>((_, reject) =>
-      setTimeout(() => reject(new Error("Gemini API timeout (3.5s)")), 3500)
+      setTimeout(() => reject(new Error("Gemini API timeout (3.0s)")), 3000)
     );
     const text = await Promise.race([generateWithCascade(prompt, true), timeoutPromise]);
 
@@ -143,7 +143,8 @@ PENTING:
       isFallback: false
     });
   } catch (error) {
-    console.warn("⚠️ Gagal memanggil Gemini API, beralih ke Fallback Database Lokal:", (error as Error).message || error);
+    const summary = formatGeminiErrorSummary(error);
+    console.warn(`⚠️ Beralih ke Fallback Database Lokal: ${summary}`);
     
     let availableLocal = LOCAL_RIDDLES.filter(r => !excludedPlants.includes(r.plantName.toLowerCase()));
     if (availableLocal.length === 0) {

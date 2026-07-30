@@ -1,29 +1,23 @@
 "use client";
 
+import Image from "next/image";
 import { useState, useCallback, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import dynamic from "next/dynamic";
 import {
   BookOpen,
   Lock,
-  Flame,
-  Trash2,
-  MapPin,
   Sprout,
   Compass,
   Trophy,
   CheckCircle2,
   Target,
   Skull,
-  Sparkles,
   LogOut,
   RotateCcw,
   Home,
   X,
-  HelpCircle,
-  Heart,
   Flower2,
-  ChevronRight,
   ArrowLeft,
   User,
   Edit3,
@@ -32,14 +26,7 @@ import {
 } from "lucide-react";
 import {
   PixelFlame,
-  PixelTrophy,
-  PixelTarget,
   PixelLogOut,
-  PixelSparkles,
-  PixelCheck,
-  PixelAward,
-  PixelTrees,
-  PixelSprout,
   PixelLeaf,
 } from "@/components/PixelIcon";
 import { PixelAvatar, PIXEL_AVATAR_LIST } from "@/components/PixelAvatar";
@@ -265,7 +252,7 @@ export default function HomePage() {
     const url = excludeQuery ? `/api/riddle?exclude=${excludeQuery}` : "/api/riddle";
 
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 3500);
+    const timeoutId = setTimeout(() => controller.abort(), 4500);
 
     try {
       const res = await fetch(url, { cache: "no-store", signal: controller.signal });
@@ -295,7 +282,8 @@ export default function HomePage() {
       setEyangMood("thinking");
     } catch (err) {
       clearTimeout(timeoutId);
-      console.warn("⚠️ Gagal memuat teka-teki dari API, menggunakan Fallback Lokal Client:", err);
+      const msg = err instanceof Error ? (err.name === "AbortError" ? "Waktu koneksi habis (Timeout)" : err.message) : String(err);
+      console.warn(`⚠️ Gagal memuat teka-teki dari API, menggunakan Fallback Lokal Client: ${msg}`);
       const fallbackData = getClientFallbackRiddle(currentSessionPlants);
       setRiddleData(fallbackData);
 
@@ -329,7 +317,7 @@ export default function HomePage() {
     const url = excludeQuery ? `/api/riddle?exclude=${excludeQuery}` : "/api/riddle";
 
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 3500);
+    const timeoutId = setTimeout(() => controller.abort(), 4500);
 
     try {
       const res = await fetch(url, { cache: "no-store", signal: controller.signal });
@@ -343,7 +331,8 @@ export default function HomePage() {
       }
     } catch (e) {
       clearTimeout(timeoutId);
-      console.warn("⚠️ Gagal mem-prefetch teka-teki berikutnya, menggunakan fallback:", e);
+      const msg = e instanceof Error ? (e.name === "AbortError" ? "Waktu koneksi habis (Timeout)" : e.message) : String(e);
+      console.warn(`⚠️ Gagal mem-prefetch teka-teki berikutnya, menggunakan fallback: ${msg}`);
       setPrefetchedRiddle(getClientFallbackRiddle(currentSessionPlants));
     } finally {
       setIsPrefetching(false);
@@ -353,25 +342,33 @@ export default function HomePage() {
   // 1. Prefetch the very first riddle when in intro lobby
   useEffect(() => {
     if (isSessionLoaded && gamePhase === "intro" && !prefetchedRiddle && !isPrefetching) {
-      prefetchNextRiddle([]);
+      setTimeout(() => {
+        prefetchNextRiddle([]);
+      }, 0);
     }
   }, [isSessionLoaded, gamePhase, prefetchedRiddle, isPrefetching, prefetchNextRiddle]);
 
   // 2. Prefetch the subsequent riddles in the background during gameplay
   useEffect(() => {
     if (isSessionLoaded && gamePhase === "playing" && riddleData && !prefetchedRiddle && !isPrefetching) {
-      prefetchNextRiddle(sessionPlantsAsked);
+      setTimeout(() => {
+        prefetchNextRiddle(sessionPlantsAsked);
+      }, 0);
     }
-  }, [isSessionLoaded, gamePhase, riddleData?.id, prefetchedRiddle, isPrefetching, sessionPlantsAsked, prefetchNextRiddle]);
+  }, [isSessionLoaded, gamePhase, riddleData, prefetchedRiddle, isPrefetching, sessionPlantsAsked, prefetchNextRiddle]);
 
   // 3. Ensure riddleData is valid when in playing phase (e.g. after browser refresh or broken fetch)
   useEffect(() => {
     if (isSessionLoaded && (gamePhase === "playing" || gamePhase === "correct")) {
       if (!riddleData || !riddleData.riddle || typeof riddleData.riddle !== "string" || !riddleData.riddle.trim()) {
         console.warn("⚠️ Sesi aktif tidak memiliki data soal valid. Memuat teka-teki baru...");
-        fetchRiddle(sessionPlantsAsked);
+        setTimeout(() => {
+          fetchRiddle(sessionPlantsAsked);
+        }, 0);
       } else {
-        setIsLoading(false);
+        setTimeout(() => {
+          setIsLoading(false);
+        }, 0);
       }
     }
   }, [isSessionLoaded, gamePhase, riddleData, fetchRiddle, sessionPlantsAsked]);
@@ -383,35 +380,38 @@ export default function HomePage() {
       if (savedSession) {
         try {
           const session = JSON.parse(savedSession);
-          if (session.gamePhase) setGamePhase(session.gamePhase);
-          if (typeof session.sessionQuestionIndex === "number") setSessionQuestionIndex(session.sessionQuestionIndex);
-          if (Array.isArray(session.sessionPlantsAsked)) setSessionPlantsAsked(session.sessionPlantsAsked);
-          if (Array.isArray(session.sessionDiscoveredPlants)) setSessionDiscoveredPlants(session.sessionDiscoveredPlants);
-          if (session.gameMode) setGameMode(session.gameMode);
-          if (typeof session.extraLivesSession === "number") setExtraLivesSession(session.extraLivesSession);
-          if (typeof session.cluesQuestionIndex === "number") setCluesQuestionIndex(session.cluesQuestionIndex);
-          if (typeof session.timeStopQuestionIndex === "number") setTimeStopQuestionIndex(session.timeStopQuestionIndex);
-          if (typeof session.sessionAttempts === "number") setSessionAttempts(session.sessionAttempts);
-          if (typeof session.hasReceivedSpecialCard === "boolean") setHasReceivedSpecialCard(session.hasReceivedSpecialCard);
-          if (typeof session.showSpecialCardModal === "boolean") setShowSpecialCardModal(session.showSpecialCardModal);
-          if (Array.isArray(session.shuffledCards)) setShuffledCards(session.shuffledCards);
-          if (typeof session.streak === "number") setStreak(session.streak);
-          if (typeof session.score === "number") setScore(session.score);
-          if (typeof session.totalCorrect === "number") setTotalCorrect(session.totalCorrect);
-          if (typeof session.totalAttempted === "number") setTotalAttempted(session.totalAttempted);
-          if (session.riddleData) setRiddleData(session.riddleData);
-          if (session.checkResult !== undefined) setCheckResult(session.checkResult);
-          if (session.eyangMessage) setEyangMessage(session.eyangMessage);
-          if (session.eyangMood) setEyangMood(session.eyangMood);
-          if (session.prefetchedRiddle) setPrefetchedRiddle(session.prefetchedRiddle);
-          // Selalu paksa sidebar tertutup saat restore — jangan pernah auto-buka saat refresh
-          setIsSidebarOpen(false);
-          setIsSidebarCollapsed(true);
+          setTimeout(() => {
+            if (session.gamePhase) setGamePhase(session.gamePhase);
+            if (typeof session.sessionQuestionIndex === "number") setSessionQuestionIndex(session.sessionQuestionIndex);
+            if (Array.isArray(session.sessionPlantsAsked)) setSessionPlantsAsked(session.sessionPlantsAsked);
+            if (Array.isArray(session.sessionDiscoveredPlants)) setSessionDiscoveredPlants(session.sessionDiscoveredPlants);
+            if (session.gameMode) setGameMode(session.gameMode);
+            if (typeof session.extraLivesSession === "number") setExtraLivesSession(session.extraLivesSession);
+            if (typeof session.cluesQuestionIndex === "number") setCluesQuestionIndex(session.cluesQuestionIndex);
+            if (typeof session.timeStopQuestionIndex === "number") setTimeStopQuestionIndex(session.timeStopQuestionIndex);
+            if (typeof session.sessionAttempts === "number") setSessionAttempts(session.sessionAttempts);
+            if (typeof session.hasReceivedSpecialCard === "boolean") setHasReceivedSpecialCard(session.hasReceivedSpecialCard);
+            if (typeof session.showSpecialCardModal === "boolean") setShowSpecialCardModal(session.showSpecialCardModal);
+            if (Array.isArray(session.shuffledCards)) setShuffledCards(session.shuffledCards);
+            if (typeof session.streak === "number") setStreak(session.streak);
+            if (typeof session.score === "number") setScore(session.score);
+            if (typeof session.totalCorrect === "number") setTotalCorrect(session.totalCorrect);
+            if (typeof session.totalAttempted === "number") setTotalAttempted(session.totalAttempted);
+            if (session.riddleData) setRiddleData(session.riddleData);
+            if (session.checkResult !== undefined) setCheckResult(session.checkResult);
+            if (session.eyangMessage) setEyangMessage(session.eyangMessage);
+            if (session.eyangMood) setEyangMood(session.eyangMood);
+            if (session.prefetchedRiddle) setPrefetchedRiddle(session.prefetchedRiddle);
+            setIsSidebarOpen(false);
+            setIsSidebarCollapsed(true);
+          }, 0);
         } catch (e) {
           console.error("Gagal mem-parse sesi aktif dari sessionStorage", e);
         }
       }
-      setIsSessionLoaded(true);
+      setTimeout(() => {
+        setIsSessionLoaded(true);
+      }, 0);
     }
   }, []);
 
@@ -422,9 +422,11 @@ export default function HomePage() {
       if (savedUser) {
         try {
           const profile = JSON.parse(savedUser);
-          setUserProfile(profile);
-          setEditingName(profile.name);
-          setSelectedAvatar(profile.avatarType === "google" ? "google_pic" : (profile.customAvatar || "🍀"));
+          setTimeout(() => {
+            setUserProfile(profile);
+            setEditingName(profile.name);
+            setSelectedAvatar(profile.avatarType === "google" ? "google_pic" : (profile.customAvatar || "🍀"));
+          }, 0);
         } catch (e) {
           console.error("Gagal mem-parse profil pengguna", e);
         }
@@ -438,11 +440,13 @@ export default function HomePage() {
       const currentTitle = calculateTitle(discoveredGallery.length);
       if (userProfile.title !== currentTitle) {
         const updatedProfile = { ...userProfile, title: currentTitle };
-        setUserProfile(updatedProfile);
-        localStorage.setItem("detektif_kebun_user", JSON.stringify(updatedProfile));
-        if (updatedProfile.email) {
-          localStorage.setItem(`detektif_kebun_user_${updatedProfile.email}`, JSON.stringify(updatedProfile));
-        }
+        setTimeout(() => {
+          setUserProfile(updatedProfile);
+          localStorage.setItem("detektif_kebun_user", JSON.stringify(updatedProfile));
+          if (updatedProfile.email) {
+            localStorage.setItem(`detektif_kebun_user_${updatedProfile.email}`, JSON.stringify(updatedProfile));
+          }
+        }, 0);
       }
     }
   }, [discoveredGallery.length, userProfile, calculateTitle]);
@@ -672,7 +676,10 @@ export default function HomePage() {
     const savedGallery = localStorage.getItem("detektif_kebun_gallery");
     if (savedGallery) {
       try {
-        setDiscoveredGallery(JSON.parse(savedGallery));
+        const gallery = JSON.parse(savedGallery);
+        setTimeout(() => {
+          setDiscoveredGallery(gallery);
+        }, 0);
       } catch (e) {
         console.error("Gagal mem-parse data galeri dari localStorage", e);
       }
@@ -683,10 +690,12 @@ export default function HomePage() {
     if (savedStats) {
       try {
         const stats = JSON.parse(savedStats);
-        if (typeof stats.score === "number") setScore(stats.score);
-        if (typeof stats.streak === "number") setStreak(stats.streak);
-        if (typeof stats.totalCorrect === "number") setTotalCorrect(stats.totalCorrect);
-        if (typeof stats.totalAttempted === "number") setTotalAttempted(stats.totalAttempted);
+        setTimeout(() => {
+          if (typeof stats.score === "number") setScore(stats.score);
+          if (typeof stats.streak === "number") setStreak(stats.streak);
+          if (typeof stats.totalCorrect === "number") setTotalCorrect(stats.totalCorrect);
+          if (typeof stats.totalAttempted === "number") setTotalAttempted(stats.totalAttempted);
+        }, 0);
       } catch (e) {
         console.error("Gagal mem-parse stats dari localStorage", e);
       }
@@ -695,7 +704,9 @@ export default function HomePage() {
     // Load performance mode setting
     const savedPerf = localStorage.getItem("detektif_kebun_perf_mode");
     if (savedPerf === "true") {
-      setPerformanceMode(true);
+      setTimeout(() => {
+        setPerformanceMode(true);
+      }, 0);
     }
   }, []);
 
@@ -889,7 +900,7 @@ export default function HomePage() {
     }
   };
 
-  const handleCorrectAnswer = (plantName: string) => {
+  const handleCorrectAnswer = () => {
     setGamePhase("correct");
   };
 
@@ -965,9 +976,6 @@ export default function HomePage() {
     setEyangMessage(msg);
     setEyangMood(mood);
   };
-
-  // Parchment paper texture pattern
-  const parchmentNoise = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E")`;
 
   return (
     <div className="relative h-screen flex flex-col lg:flex-row overflow-hidden">
@@ -1284,7 +1292,7 @@ export default function HomePage() {
               >
                 <div className="w-10 h-10 rounded-sm border-2 border-[#1a0f09] bg-[#12130e] flex items-center justify-center overflow-hidden shadow-inner group-hover:border-pixel-gold transition-colors">
                   {userProfile.avatarType === "google" && userProfile.picture ? (
-                    <img src={userProfile.picture} alt="Google Profile" className="w-full h-full object-cover" />
+                    <Image src={userProfile.picture} alt="Google Profile" width={40} height={40} className="w-full h-full object-cover" unoptimized />
                   ) : (
                     <PixelAvatar char={userProfile.customAvatar} size={24} />
                   )}
@@ -1460,7 +1468,7 @@ export default function HomePage() {
                 >
                   <div className="w-8 h-8 rounded-sm border-2 border-[#c9a227] bg-[#12130e] flex items-center justify-center overflow-hidden shrink-0">
                     {userProfile.avatarType === "google" && userProfile.picture ? (
-                      <img src={userProfile.picture} alt="Google Profile" className="w-full h-full object-cover" />
+                      <Image src={userProfile.picture} alt="Google Profile" width={32} height={32} className="w-full h-full object-cover" unoptimized />
                     ) : (
                       <PixelAvatar char={userProfile.customAvatar} size={22} />
                     )}
@@ -2232,8 +2240,8 @@ export default function HomePage() {
                         whileHover={{ y: -12, scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
                       >
-                        <img 
-                          src={EyangNyawaImg.src} 
+                        <Image 
+                          src={EyangNyawaImg} 
                           alt="Kartu Nyawa - Bantuan Eyang" 
                           className="w-full h-auto object-contain drop-shadow-[0_8px_16px_rgba(0,0,0,0.6)] group-hover:drop-shadow-[0_0_25px_rgba(239,68,68,0.9)] transition-all duration-300"
                         />
@@ -2259,8 +2267,8 @@ export default function HomePage() {
                         whileHover={{ y: -12, scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
                       >
-                        <img 
-                          src={EyangClueImg.src} 
+                        <Image 
+                          src={EyangClueImg} 
                           alt="Kartu Petunjuk - Buku Panduan Rimba" 
                           className="w-full h-auto object-contain drop-shadow-[0_8px_16px_rgba(0,0,0,0.6)] group-hover:drop-shadow-[0_0_25px_rgba(34,197,94,0.9)] transition-all duration-300"
                         />
@@ -2286,8 +2294,8 @@ export default function HomePage() {
                         whileHover={{ y: -12, scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
                       >
-                        <img 
-                          src={EyangTimeStopImg.src} 
+                        <Image 
+                          src={EyangTimeStopImg} 
                           alt="Kartu Waktu - Kekuatan Alam" 
                           className="w-full h-auto object-contain drop-shadow-[0_8px_16px_rgba(0,0,0,0.6)] group-hover:drop-shadow-[0_0_25px_rgba(56,189,248,0.9)] transition-all duration-300"
                         />
@@ -2369,7 +2377,7 @@ export default function HomePage() {
                 <div className="flex flex-col items-center gap-3 mt-2">
                   <div className="relative w-20 h-20 border-4 border-pixel-gold bg-[#12130e] flex items-center justify-center overflow-hidden p-1 shadow-[0_0_15px_rgba(0,0,0,0.5)]" style={{ imageRendering: "pixelated" }}>
                     {selectedAvatar === "google_pic" && userProfile.picture ? (
-                      <img src={userProfile.picture} alt="Google Profile" className="w-full h-full object-cover" />
+                      <Image src={userProfile.picture} alt="Google Profile" width={80} height={80} className="w-full h-full object-cover" unoptimized />
                     ) : (
                       <PixelAvatar char={selectedAvatar} size={48} />
                     )}
@@ -2418,7 +2426,7 @@ export default function HomePage() {
                         style={{ imageRendering: "pixelated" }}
                         title="Foto Google"
                       >
-                        <img src={userProfile.picture} alt="Google" className="w-full h-full object-cover" />
+                        <Image src={userProfile.picture} alt="Google" width={56} height={56} className="w-full h-full object-cover" unoptimized />
                       </button>
                     )}
                     {PIXEL_AVATARS.map((av) => {

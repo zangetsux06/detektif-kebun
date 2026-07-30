@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Loader2, AlertCircle } from "lucide-react";
 import { PixelCompass, PixelHelp } from "./PixelIcon";
@@ -172,7 +172,7 @@ function PixelLightbulb() {
 const playBeep = (freq = 800, duration = 0.1, type = "sine") => {
   if (typeof window === "undefined") return;
   try {
-    const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+    const AudioContextClass = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
     if (!AudioContextClass) return;
     const audioCtx = new AudioContextClass();
     const oscillator = audioCtx.createOscillator();
@@ -328,7 +328,6 @@ export default function RiddleCard({
   const [questionAttempts, setQuestionAttempts] = useState(0);
   const [lastWrong, setLastWrong] = useState(false);
   const [isGameOver, setIsGameOver] = useState(false);
-  const [isFailedEasy, setIsFailedEasy] = useState(false); // Backwards compatibility if needed, but we will use isFailedQuestion
   const [isFailedQuestion, setIsFailedQuestion] = useState(false);
   const [revealedPlantName, setRevealedPlantName] = useState("");
   const [displayedRiddle, setDisplayedRiddle] = useState("");
@@ -341,7 +340,7 @@ export default function RiddleCard({
   const maxLives = (gameMode === "hard" ? 2 : 3) + extraLivesSession;
   const currentLives = maxLives - attempts;
 
-  const handleTimeout = () => {
+  const handleTimeout = useCallback(() => {
     const realName = atob(riddleData?.encodedPlant ?? "");
 
     if (gameMode === "hard") {
@@ -393,7 +392,7 @@ export default function RiddleCard({
         setTimeLeft(60);
       }
     }
-  };
+  }, [riddleData?.encodedPlant, gameMode, setAttempts, maxLives, onResetStreak, onAnswerResult, onEyangMessage, attempts]);
 
   const handleTimeoutRef = useRef(handleTimeout);
   useEffect(() => {
@@ -415,7 +414,7 @@ export default function RiddleCard({
     return () => {
       clearInterval(interval);
     };
-  }, [riddleData?.id, isCorrect, isGameOver, isLoading, gameMode, isTimeStoppedForNextQuestion]);
+  }, [riddleData, isCorrect, isGameOver, isLoading, gameMode, isTimeStoppedForNextQuestion]);
 
   // Trigger timeout logic safely outside rendering
   useEffect(() => {
@@ -446,41 +445,47 @@ export default function RiddleCard({
 
     if (currentRiddleIdRef.current !== riddleData.id) {
       currentRiddleIdRef.current = riddleData.id;
-      setAnswer("");
-      if (gameMode !== "hard") {
-        setAttempts(0);
-      }
-      setQuestionAttempts(0);
-      setLastWrong(false);
-      setIsGameOver(false);
-      setIsFailedEasy(false);
-      setIsFailedQuestion(false);
-      setRevealedPlantName("");
-      setTimeLeft(gameMode === "hard" ? 30 : 60);
-      setTimeout(() => inputRef.current?.focus(), 400);
 
-      if (!riddleData?.riddle) {
-        setDisplayedRiddle("");
-        setIsTypingRiddle(false);
-        return;
-      }
-      setDisplayedRiddle("");
-      setIsTypingRiddle(true);
-      let i = 0;
-      const interval = setInterval(() => {
-        setDisplayedRiddle(riddleData.riddle.slice(0, i + 1));
-        i++;
-        if (i >= riddleData.riddle.length) {
-          clearInterval(interval);
-          setIsTypingRiddle(false);
+      let interval: NodeJS.Timeout | null = null;
+      const timer = setTimeout(() => {
+        setAnswer("");
+        if (gameMode !== "hard") {
+          setAttempts(0);
         }
-      }, 18);
+        setQuestionAttempts(0);
+        setLastWrong(false);
+        setIsGameOver(false);
+        setIsFailedQuestion(false);
+        setRevealedPlantName("");
+        setTimeLeft(gameMode === "hard" ? 30 : 60);
+        inputRef.current?.focus();
+
+        if (!riddleData?.riddle) {
+          setDisplayedRiddle("");
+          setIsTypingRiddle(false);
+          return;
+        }
+
+        setDisplayedRiddle("");
+        setIsTypingRiddle(true);
+        let i = 0;
+        interval = setInterval(() => {
+          setDisplayedRiddle(riddleData.riddle.slice(0, i + 1));
+          i++;
+          if (i >= riddleData.riddle.length) {
+            if (interval) clearInterval(interval);
+            setIsTypingRiddle(false);
+          }
+        }, 18);
+      }, 0);
+
       return () => {
-        clearInterval(interval);
+        clearTimeout(timer);
+        if (interval) clearInterval(interval);
         setIsTypingRiddle(false);
       };
     }
-  }, [riddleData?.id, riddleData?.riddle, isCorrect, gameMode]);
+  }, [riddleData, isCorrect, gameMode, setAttempts]);
 
   const handleRipple = (e: React.MouseEvent<HTMLButtonElement>) => {
     const btn = btnRef.current;
@@ -554,7 +559,6 @@ export default function RiddleCard({
           
           if (gameMode === "easy" || gameMode === "normal") {
             setIsFailedQuestion(true);
-            setIsFailedEasy(true);
             onAnswerResult({
               correct: false,
               plantName: realName,

@@ -48,7 +48,7 @@ function TypewriterText({ text, active, onComplete, speed = 10 }: { text: string
 
   useEffect(() => {
     if (!active) {
-      setDisplayedText("");
+      setTimeout(() => setDisplayedText(""), 0);
       return;
     }
     let i = 0;
@@ -229,7 +229,6 @@ export default function BotanicalCanvas({
   const [showFacts, setShowFacts] = useState(() => {
     return !!svgDataCache[plantName];
   });
-  const [totalDuration, setTotalDuration] = useState(5000);
   const [triggerFlash, setTriggerFlash] = useState(false);
   const [currentTypingFact, setCurrentTypingFact] = useState(() => {
     return svgDataCache[plantName] ? 999 : 0; // Skip typewriter if already cached
@@ -247,29 +246,41 @@ export default function BotanicalCanvas({
   // Image-mode effect: reveal sketch with ink animation when it loads
   useEffect(() => {
     if (!isImageMode) return;
-    setSketchLoaded(false);
-    setSketchRevealed(false);
-    setShowFacts(false);
-    setCurrentTypingFact(0);
-    setTriggerFlash(false);
+    const timer = setTimeout(() => {
+      setSketchLoaded(false);
+      setSketchRevealed(false);
+      setShowFacts(false);
+      setCurrentTypingFact(0);
+      setTriggerFlash(false);
+    }, 0);
+    return () => clearTimeout(timer);
   }, [plantName, isImageMode]);
 
   useEffect(() => {
-    if (!isImageMode) return;
-    setIsNextClicked(false);
-    if (svgDataCache[plantName]) {
-      setSvgData(svgDataCache[plantName]);
-      setDrawnPaths(svgDataCache[plantName].paths.length);
-      setShowFacts(true);
-      setCurrentTypingFact(999);
+    if (isImageMode) {
+      setTimeout(() => setIsNextClicked(false), 0);
       return;
     }
 
-    setSvgData(null);
-    setDrawnPaths(0);
-    setShowFacts(false);
-    setTriggerFlash(false);
-    setCurrentTypingFact(0);
+    if (svgDataCache[plantName]) {
+      setTimeout(() => {
+        setIsNextClicked(false);
+        setSvgData(svgDataCache[plantName]);
+        setDrawnPaths(svgDataCache[plantName].paths.length);
+        setShowFacts(true);
+        setCurrentTypingFact(999);
+      }, 0);
+      return;
+    }
+
+    setTimeout(() => {
+      setIsNextClicked(false);
+      setSvgData(null);
+      setDrawnPaths(0);
+      setShowFacts(false);
+      setTriggerFlash(false);
+      setCurrentTypingFact(0);
+    }, 0);
 
     // Fetch SVG data
     fetch("/api/botanical-art", {
@@ -282,7 +293,6 @@ export default function BotanicalCanvas({
       .then((data) => {
         svgDataCache[plantName] = data.svgData;
         setSvgData(data.svgData);
-        setTotalDuration(data.totalDuration || 5000);
         setDrawnPaths(0);
 
         data.svgData.paths.forEach((_: SVGPath, idx: number) => {

@@ -26,8 +26,6 @@ export default function EyangRimba({ message, mood = "neutral", isTyping = false
 
   useEffect(() => {
     if (!message) return;
-    setDisplayedText("");
-    setIsAnimating(true);
 
     let i = 0;
     const speed = 28; // ms per char
@@ -42,7 +40,12 @@ export default function EyangRimba({ message, mood = "neutral", isTyping = false
       }
     };
 
-    timerRef.current = setTimeout(type, 100);
+    timerRef.current = setTimeout(() => {
+      setDisplayedText("");
+      setIsAnimating(true);
+      type();
+    }, 100);
+
     return () => { if (timerRef.current) clearTimeout(timerRef.current); };
   }, [message]);
 

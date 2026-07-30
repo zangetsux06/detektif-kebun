@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { PixelTrash, PixelLock } from "./PixelIcon";
 import { PLANT_ICON_MAP, getNormalizedPlantKey } from "./BotanicalCanvas";
@@ -155,9 +156,11 @@ export default function FloraCollectionModal({
                     // Icon area content
                     const iconContent = isDiscovered ? (
                       iconSrc ? (
-                        <img
+                        <Image
                           src={iconSrc}
                           alt={`Ikon ${flora.name}`}
+                          width={64}
+                          height={64}
                           className="w-16 h-16 object-contain"
                           style={{ imageRendering: "pixelated" }}
                         />

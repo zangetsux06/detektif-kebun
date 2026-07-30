@@ -76,13 +76,30 @@ export function getGeminiModelJSON(generationConfig?: GenerationConfig) {
   });
 }
 
+export function formatGeminiErrorSummary(err: unknown): string {
+  const msg = (err as Error)?.message || String(err);
+  if (msg.includes("429") || msg.includes("Quota exceeded")) {
+    return "Quota Gemini API terlampaui (429 Too Many Requests)";
+  }
+  if (msg.includes("timeout")) {
+    return "Waktu koneksi habis (Timeout)";
+  }
+  const firstLine = msg.split("\n")[0];
+  return firstLine.length > 100 ? firstLine.slice(0, 100) + "..." : firstLine;
+}
+
 // Cascade: try each model until one succeeds
 export async function generateWithCascade(
   prompt: string,
   useJSON = false,
   generationConfig?: GenerationConfig
 ): Promise<string> {
+  let isQuotaExceeded = false;
+
   for (const modelName of MODEL_CASCADE) {
+    if (isQuotaExceeded) {
+      break;
+    }
     try {
       const model = genAI.getGenerativeModel({
         model: modelName,
@@ -97,16 +114,20 @@ export async function generateWithCascade(
           ...generationConfig,
         },
       });
-      
+
       const timeoutPromise = new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error(`Model ${modelName} timeout (3.5s)`)), 3500)
+        setTimeout(() => reject(new Error(`Model ${modelName} timeout (2.5s)`)), 2500)
       );
 
       const result = await Promise.race([model.generateContent(prompt), timeoutPromise]);
       return result.response.text();
     } catch (err: unknown) {
-      console.warn(`⚠️ Model ${modelName} gagal:`, (err as Error)?.message || err);
-      continue;
+      const summary = formatGeminiErrorSummary(err);
+      console.warn(`⚠️ Model ${modelName} gagal: ${summary}`);
+
+      if (summary.includes("Quota Gemini API terlampaui")) {
+        isQuotaExceeded = true;
+      }
     }
   }
   throw new Error("Semua model Gemini tidak tersedia saat ini.");

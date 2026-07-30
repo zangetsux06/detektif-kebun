@@ -681,7 +681,6 @@ function generateRotan(): BotanicalSVGData {
   const stemColor = "#6b4226";
   const thornColor = "#4a2d14";
   const leafColor = "#3a5f25";
-  const leafVein = "#2b4518";
 
   return {
     viewBox: "0 0 400 500",
@@ -2958,7 +2957,6 @@ function generateMelati(): BotanicalSVGData {
   const petalFill = "#f7f3ed"; // isi kelopak: putih krem sangat lembut
   const sepalColor = "#4a6030"; // sepal/kelopak pelindung hijau tua
   const stamenCol = "#c8a840"; // benang sari emas
-  const budColor = "#e8e0d0"; // kuncup sebelum mekar (sedikit krem)
 
   return {
     viewBox: "0 0 400 500",
