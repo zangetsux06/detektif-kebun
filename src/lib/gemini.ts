@@ -97,15 +97,16 @@ export async function generateWithCascade(
           ...generationConfig,
         },
       });
-      const result = await model.generateContent(prompt);
+      
+      const timeoutPromise = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error(`Model ${modelName} timeout (3.5s)`)), 3500)
+      );
+
+      const result = await Promise.race([model.generateContent(prompt), timeoutPromise]);
       return result.response.text();
     } catch (err: unknown) {
-      const status = (err as { status?: number })?.status;
-      if (status === 429 || status === 503 || status === 404) {
-        console.warn(`⚠️ Model ${modelName} gagal (${status}), mencoba model berikutnya...`);
-        continue;
-      }
-      throw err; // unknown error, rethrow
+      console.warn(`⚠️ Model ${modelName} gagal:`, (err as Error)?.message || err);
+      continue;
     }
   }
   throw new Error("Semua model Gemini tidak tersedia saat ini.");

@@ -101,7 +101,10 @@ PENTING:
 - Buat 3 petunjuk bertahap dari petunjuk 1 (sulit) hingga petunjuk 3 (mudah).
 `;
 
-    const text = await generateWithCascade(prompt, true);
+    const timeoutPromise = new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error("Gemini API timeout (3.5s)")), 3500)
+    );
+    const text = await Promise.race([generateWithCascade(prompt, true), timeoutPromise]);
 
     let parsed;
     try {

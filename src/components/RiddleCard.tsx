@@ -788,13 +788,13 @@ export default function RiddleCard({
 
         {/* Riddle & First Letter */}
         <div
-          className="p-5 space-y-3 border-4 border-pixel-wood bg-pixel-moss/10"
+          className="p-6 sm:p-8 space-y-4 border-4 border-pixel-wood bg-pixel-moss/10 shadow-inner"
           style={{ imageRendering: "pixelated" }}
         >
           {/* Label badge */}
           <div className="inline-flex items-center gap-1.5">
             <span
-              className="px-3 py-1 border-2 border-pixel-wood text-[9px] font-bold uppercase tracking-wider bg-pixel-leaf text-pixel-parchment"
+              className="px-3.5 py-1.5 border-2 border-pixel-wood text-[9px] sm:text-[10px] font-bold uppercase tracking-wider bg-pixel-leaf text-pixel-parchment shadow-sm"
               style={{ fontFamily: "var(--font-title)", letterSpacing: "0.14em" }}
             >
               Pernyataan Eyang
@@ -802,12 +802,12 @@ export default function RiddleCard({
           </div>
 
           <p
-            className="text-riddle-body leading-loose"
+            className="text-riddle-body leading-relaxed px-1 sm:px-3 py-1.5 text-pixel-dark font-medium text-sm sm:text-base"
           >
             &ldquo;{displayedRiddle || riddleData?.riddle || "Merapalkan teka-teki..."}
             {isTypingRiddle && (
               <span
-                className="inline-block ml-1 w-2.5 h-4.5 align-middle bg-pixel-gold"
+                className="inline-block ml-1.5 w-2.5 h-4.5 align-middle bg-pixel-gold"
                 style={{
                   animation: "typewriter-cursor 0.7s ease-in-out infinite",
                 }}
@@ -817,11 +817,11 @@ export default function RiddleCard({
           </p>
 
           {/* First Letter Clue (Always Visible) */}
-          <div className="flex items-center gap-2 pt-2.5 border-t-2 border-dashed border-pixel-wood/30 text-xs font-bold text-pixel-wood uppercase tracking-wider">
+          <div className="flex flex-wrap items-center gap-2 pt-4 px-1 border-t-2 border-dashed border-pixel-wood/30 text-xs sm:text-sm font-bold text-pixel-wood uppercase tracking-wider">
             <span>🏷️</span>
             <span>
               Huruf Awalan Spesimen:{" "}
-              <strong className="text-white text-xs font-bold uppercase bg-pixel-wood px-2 py-0.5 border-2 border-pixel-wood ml-1">
+              <strong className="text-white text-xs sm:text-sm font-bold uppercase bg-pixel-wood px-2.5 py-1 border-2 border-pixel-wood ml-1">
                 {riddleData.firstLetter}
               </strong>
             </span>
@@ -830,14 +830,14 @@ export default function RiddleCard({
 
         {/* Fun fact */}
         <div className="card-showcase-gold p-4 flex flex-col items-center text-center">
-          <div className="card-parchment w-full p-5 text-pixel-dark flex flex-col items-center relative gap-2">
+          <div className="card-parchment w-full p-5 sm:p-6 text-pixel-dark flex flex-col items-center relative gap-2.5">
             <PixelLightbulb />
             <span className="text-fun-fact-header block">
               FUN FACT FLORA
             </span>
             <p
-              className="font-semibold text-pixel-dark leading-relaxed max-w-sm"
-              style={{ fontFamily: "var(--font-body)", fontSize: "0.82rem", lineHeight: "1.8" }}
+              className="font-medium text-pixel-dark leading-relaxed max-w-md text-sm sm:text-base"
+              style={{ fontFamily: "var(--font-body)", lineHeight: "1.65" }}
             >
               {riddleData.funFact}
             </p>

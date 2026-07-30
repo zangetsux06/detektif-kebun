@@ -425,3 +425,30 @@ export function PixelTrash({ size = 16, className = "", ...props }: PixelIconPro
     </svg>
   );
 }
+
+// ─── 8-Bit Pixel Leaf Icon ──────────────────────────────────────────────────
+export function PixelLeaf({ size = 20, color = "#4a5d23", className = "", ...props }: PixelIconProps) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 16 16"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      shapeRendering="crispEdges"
+      className={className}
+      {...props}
+    >
+      {/* Outer Leaf Silhouette */}
+      <path d="M8 1h3v2H8V1zm3 2h2v3h-2V3zm2 3h1v4h-1V6zm-1 4h-2v2h2v-2zm-2 2h-3v2h3v-2z" fill="#1a1c14" />
+      {/* Main Leaf Fill */}
+      <path d="M6 3h4v2H6V3zm-2 2h7v4H4V5zm1 4h6v2H5V9zm2 2h2v2H7v-2z" fill={color} />
+      {/* Leaf Highlights */}
+      <path d="M7 3h2v2H7V3zm-2 2h3v2H5V5zm0 2h2v2H5V7z" fill="#7ba036" />
+      {/* Central Leaf Vein */}
+      <path d="M7 4h1v7H7V4zm-1 7h1v2H6v-2z" fill="#c9a227" />
+      {/* Stem */}
+      <path d="M4 12h2v2H4v-2zm-2 2h2v2H2v-2z" fill="#5e3c25" />
+    </svg>
+  );
+}

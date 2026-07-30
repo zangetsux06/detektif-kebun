@@ -40,6 +40,7 @@ import {
   PixelAward,
   PixelTrees,
   PixelSprout,
+  PixelLeaf,
 } from "@/components/PixelIcon";
 import { PixelAvatar, PIXEL_AVATAR_LIST } from "@/components/PixelAvatar";
 import { getClientFallbackRiddle } from "@/lib/riddles";
@@ -263,8 +264,12 @@ export default function HomePage() {
     const excludeQuery = currentSessionPlants.map(encodeURIComponent).join(",");
     const url = excludeQuery ? `/api/riddle?exclude=${excludeQuery}` : "/api/riddle";
 
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 3500);
+
     try {
-      const res = await fetch(url, { cache: "no-store" });
+      const res = await fetch(url, { cache: "no-store", signal: controller.signal });
+      clearTimeout(timeoutId);
       if (!res.ok) throw new Error(`HTTP Error status ${res.status}`);
 
       const data: RiddleData = await res.json();
@@ -289,6 +294,7 @@ export default function HomePage() {
       setEyangMessage("Baiklah, Nak... dengarkan baik-baik teka-tekiku ini. Apa gerangan namanya?");
       setEyangMood("thinking");
     } catch (err) {
+      clearTimeout(timeoutId);
       console.warn("⚠️ Gagal memuat teka-teki dari API, menggunakan Fallback Lokal Client:", err);
       const fallbackData = getClientFallbackRiddle(currentSessionPlants);
       setRiddleData(fallbackData);
@@ -322,8 +328,12 @@ export default function HomePage() {
     const excludeQuery = currentSessionPlants.map(encodeURIComponent).join(",");
     const url = excludeQuery ? `/api/riddle?exclude=${excludeQuery}` : "/api/riddle";
 
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 3500);
+
     try {
-      const res = await fetch(url, { cache: "no-store" });
+      const res = await fetch(url, { cache: "no-store", signal: controller.signal });
+      clearTimeout(timeoutId);
       if (!res.ok) throw new Error("Prefetch HTTP error");
       const data: RiddleData = await res.json();
       if (data && data.riddle && typeof data.riddle === "string" && data.riddle.trim()) {
@@ -332,6 +342,7 @@ export default function HomePage() {
         setPrefetchedRiddle(getClientFallbackRiddle(currentSessionPlants));
       }
     } catch (e) {
+      clearTimeout(timeoutId);
       console.warn("⚠️ Gagal mem-prefetch teka-teki berikutnya, menggunakan fallback:", e);
       setPrefetchedRiddle(getClientFallbackRiddle(currentSessionPlants));
     } finally {
@@ -359,6 +370,8 @@ export default function HomePage() {
       if (!riddleData || !riddleData.riddle || typeof riddleData.riddle !== "string" || !riddleData.riddle.trim()) {
         console.warn("⚠️ Sesi aktif tidak memiliki data soal valid. Memuat teka-teki baru...");
         fetchRiddle(sessionPlantsAsked);
+      } else {
+        setIsLoading(false);
       }
     }
   }, [isSessionLoaded, gamePhase, riddleData, fetchRiddle, sessionPlantsAsked]);
@@ -940,6 +953,8 @@ export default function HomePage() {
         return [...prev, plantName];
       });
       setPrefetchedRiddle(null);
+      setIsLoading(false);
+      setIsEyangTyping(false);
       isTransitioningRef.current = false;
     } else {
       fetchRiddle(sessionPlantsAsked);
@@ -1394,17 +1409,23 @@ export default function HomePage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, ease: "easeOut" }}
           >
-            {/* Decorative leaf row */}
-            <div className="flex items-center justify-center gap-2 mb-3 opacity-60">
-              {["🍃", "🌿", "🌱", "🌿", "🍃"].map((leaf, i) => (
-                <motion.span
+            {/* Decorative leaf row (Retro Pixel Art) */}
+            <div className="flex items-center justify-center gap-3 mb-3">
+              {[
+                { color: "#4a5d23", size: 22, delay: 0 },
+                { color: "#647c35", size: 26, delay: 0.2 },
+                { color: "#c9a227", size: 28, delay: 0.4 },
+                { color: "#7ba036", size: 26, delay: 0.6 },
+                { color: "#4a5d23", size: 22, delay: 0.8 },
+              ].map((leaf, i) => (
+                <motion.div
                   key={i}
-                  className="text-lg"
-                  animate={{ y: [0, -5, 0] }}
-                  transition={{ duration: 2.5, repeat: Infinity, delay: i * 0.3 }}
+                  className="inline-flex items-center justify-center filter drop-shadow-[0_2px_0_rgba(0,0,0,0.5)]"
+                  animate={{ y: [0, -6, 0] }}
+                  transition={{ duration: 2.2, repeat: Infinity, delay: leaf.delay }}
                 >
-                  {leaf}
-                </motion.span>
+                  <PixelLeaf size={leaf.size} color={leaf.color} />
+                </motion.div>
               ))}
             </div>
 
@@ -1424,7 +1445,7 @@ export default function HomePage() {
         <main className="flex-1 w-full max-w-4xl mx-auto px-4 pb-12 flex flex-col gap-6">
           {/* Profil / Login Badge (Mobile) */}
           {gamePhase === "intro" && (
-            <div className="lg:hidden w-full flex justify-end px-1 mt-2">
+            <div className="lg:hidden w-full flex justify-end px-1 mt-1 z-30">
               {userProfile ? (
                 <motion.button
                   onClick={() => {
@@ -1432,23 +1453,23 @@ export default function HomePage() {
                     setSelectedAvatar(userProfile.avatarType === "google" ? "google_pic" : userProfile.customAvatar);
                     setShowProfileModal(true);
                   }}
-                  className="card-wood-rpg px-3 py-1.5 flex items-center gap-2.5 border-4 border-pixel-wood bg-pixel-moss hover:bg-pixel-leaf text-pixel-parchment cursor-pointer shadow-md"
-                  whileHover={{ scale: 1.03 }}
-                  whileTap={{ scale: 0.97 }}
+                  className="flex items-center gap-2.5 px-3 py-1.5 bg-[#1c150c] border-2 border-[#5e3c25] hover:border-[#c9a227] rounded-sm shadow-[0_3px_0_#0f0a05] cursor-pointer transition-all group max-w-[85vw]"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
                   style={{ imageRendering: "pixelated" }}
                 >
-                  <div className="w-7 h-7 border-2 border-pixel-gold bg-[#12130e] flex items-center justify-center overflow-hidden p-0.5">
+                  <div className="w-8 h-8 rounded-sm border-2 border-[#c9a227] bg-[#12130e] flex items-center justify-center overflow-hidden shrink-0">
                     {userProfile.avatarType === "google" && userProfile.picture ? (
                       <img src={userProfile.picture} alt="Google Profile" className="w-full h-full object-cover" />
                     ) : (
-                      <PixelAvatar char={userProfile.customAvatar} size={20} />
+                      <PixelAvatar char={userProfile.customAvatar} size={22} />
                     )}
                   </div>
-                  <div className="flex flex-col items-start leading-none">
-                    <span className="text-[9px] font-bold text-pixel-gold uppercase tracking-wider block" style={{ fontFamily: "var(--font-title)" }}>
+                  <div className="flex flex-col items-start leading-tight min-w-0 flex-1">
+                    <span className="text-[10px] sm:text-xs font-extrabold text-[#f4eedd] group-hover:text-pixel-gold tracking-wide truncate max-w-[130px] sm:max-w-[180px] block" style={{ fontFamily: "var(--font-title)" }}>
                       {userProfile.name}
                     </span>
-                    <span className="text-[7px] font-bold opacity-75 mt-0.5" style={{ fontFamily: "var(--font-title)" }}>
+                    <span className="text-[8px] sm:text-[9px] font-bold text-[#a4b486] mt-0.5 truncate max-w-[130px] sm:max-w-[180px] block" style={{ fontFamily: "var(--font-title)" }}>
                       🏆 {userProfile.title}
                     </span>
                   </div>
@@ -1456,14 +1477,14 @@ export default function HomePage() {
               ) : (
                 <motion.button
                   onClick={handleGoogleLogin}
-                  className="btn-organic text-[8px] px-3.5 py-2 flex items-center gap-1.5 cursor-pointer shadow-md"
+                  className="btn-organic text-[9px] px-4 py-2 flex items-center gap-1.5 cursor-pointer shadow-md"
                   whileHover={{ scale: 1.03 }}
                   whileTap={{ scale: 0.97 }}
                   style={{
                     backgroundColor: "var(--pixel-wood)",
                     color: "#fff",
                     fontFamily: "var(--font-title)",
-                    border: "4px solid var(--pixel-wood)",
+                    border: "3px solid var(--pixel-wood)",
                   }}
                 >
                   <LogIn className="w-3.5 h-3.5" />
@@ -1490,19 +1511,19 @@ export default function HomePage() {
           {/* Session Progress Bar and Stop Button */}
           {(gamePhase === "playing" || gamePhase === "correct") && (
             <motion.div
-              className="w-full flex items-center justify-between px-5 py-3 border-4 border-pixel-wood bg-pixel-moss"
+              className="w-full flex flex-wrap items-center justify-between gap-3.5 px-6 py-4.5 sm:py-5 border-4 border-pixel-wood bg-pixel-moss shadow-xl"
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
             >
-              <div className="flex flex-wrap items-center gap-3">
-                <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-3 sm:gap-4">
+                <div className="flex items-center gap-2 px-3 py-1 bg-pixel-dark/50 border border-pixel-wood/60 rounded-xs">
                   <Sprout className="text-pixel-gold w-4 h-4" />
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-pixel-parchment">
-                    Progres: <span className="text-pixel-gold font-bold" style={{ fontFamily: "var(--font-title)" }}>Soal {sessionQuestionIndex} / 15</span>
+                  <span className="text-xs sm:text-sm font-bold uppercase tracking-wider text-pixel-parchment">
+                    Progres: <span className="text-pixel-gold font-bold ml-1" style={{ fontFamily: "var(--font-title)" }}>Soal {sessionQuestionIndex} / 15</span>
                   </span>
                 </div>
-                <span className={`text-[8px] font-bold uppercase px-2 py-0.5 border-2 
+                <span className={`text-[9px] sm:text-[10px] font-bold uppercase px-3 py-1 border-2 
                   ${gameMode === "easy" ? "border-pixel-wood bg-pixel-leaf text-pixel-parchment" : 
                     gameMode === "normal" ? "border-pixel-wood bg-pixel-gold text-pixel-dark" : 
                     "border-red-700 bg-red-800 text-white"}`}
@@ -1513,12 +1534,12 @@ export default function HomePage() {
               </div>
               <motion.button
                 onClick={() => setShowSurrenderConfirm(true)}
-                className="flex items-center gap-1.5 px-3 py-1 border-2 border-pixel-wood bg-red-800 text-[8px] font-bold uppercase text-white hover:bg-red-900 transition-all duration-100 cursor-pointer shadow-md"
+                className="flex items-center gap-2 px-4 py-2 border-2 border-pixel-wood bg-red-800 text-[9px] sm:text-xs font-bold uppercase text-white hover:bg-red-900 transition-all duration-100 cursor-pointer shadow-md"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 style={{ fontFamily: "var(--font-title)" }}
               >
-                <PixelLogOut size={14} />
+                <PixelLogOut size={16} />
                 <span>Menyerah</span>
               </motion.button>
             </motion.div>

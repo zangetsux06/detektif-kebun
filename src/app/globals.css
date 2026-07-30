@@ -1,10 +1,10 @@
-@import url("https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Share+Tech+Mono&family=VT323:wght@400&family=Lora:ital,wght@0,600;1,400&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Share+Tech+Mono&family=VT323:wght@400&family=Plus+Jakarta+Sans:wght@500;600;700&display=swap");
 @import "tailwindcss";
 
 /* Override Tailwind Preflight */
 html,
 :host {
-  line-height: 3;
+  line-height: 1.5;
 }
 
 /* ─── Design Tokens (Retro Pixel Art 8-Bit) ─────── */
@@ -489,8 +489,8 @@ p, li {
 .text-fun-fact-header {
   font-family: var(--font-title);
   color: #c9a227;
-  font-size: 0.55rem;
-  letter-spacing: 0.12em;
+  font-size: 0.65rem;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
   text-shadow:
     1px 1px 0 #3a2010,
@@ -509,10 +509,12 @@ p, li {
 
 /* ─── Clue / Body Text Style ────────────────────────── */
 .text-riddle-body {
-  font-family: var(--font-prose);
-  font-size: 1.45rem;
-  line-height: 2.0;
+  font-family: var(--font-body);
+  font-size: 1.1rem;
+  line-height: 1.65;
+  font-weight: 600;
   color: var(--pixel-dark);
+  letter-spacing: 0.01em;
 }
 
 .glass-forest {
