@@ -209,6 +209,7 @@ export default function HomePage() {
 
   // User Profile States
   interface UserProfile {
+    id?: string;
     name: string;
     email: string;
     picture: string;
@@ -218,6 +219,8 @@ export default function HomePage() {
   }
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [showProfileModal, setShowProfileModal] = useState(false);
+  const [showGoogleConfigModal, setShowGoogleConfigModal] = useState(false);
+  const [customClientIdInput, setCustomClientIdInput] = useState("");
   const [showSurrenderConfirm, setShowSurrenderConfirm] = useState(false);
   const [editingName, setEditingName] = useState("");
   const [selectedAvatar, setSelectedAvatar] = useState("🍀");
@@ -424,11 +427,14 @@ export default function HomePage() {
         const updatedProfile = { ...userProfile, title: currentTitle };
         setUserProfile(updatedProfile);
         localStorage.setItem("detektif_kebun_user", JSON.stringify(updatedProfile));
+        if (updatedProfile.email) {
+          localStorage.setItem(`detektif_kebun_user_${updatedProfile.email}`, JSON.stringify(updatedProfile));
+        }
       }
     }
   }, [discoveredGallery.length, userProfile, calculateTitle]);
 
-  // Google OAuth redirect extraction
+  // Google OAuth redirect extraction & user account sync
   useEffect(() => {
     if (typeof window !== "undefined" && window.location.hash) {
       const hash = window.location.hash.substring(1);
@@ -438,7 +444,7 @@ export default function HomePage() {
         window.history.replaceState(null, "", window.location.pathname);
         
         const fetchUserProfile = async (token: string) => {
-          setEyangMessage("Menghubungkan ke Google...");
+          setEyangMessage("Menghubungkan ke akun Google...");
           setEyangMood("thinking");
           try {
             const res = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
@@ -446,21 +452,65 @@ export default function HomePage() {
             });
             if (res.ok) {
               const data = await res.json();
+              const accountKey = data.email || data.sub || "google_user";
+
+              // Check if account has saved profile, gallery, and stats
+              let savedAccountProfile: UserProfile | null = null;
+              const savedUserStr = localStorage.getItem(`detektif_kebun_user_${accountKey}`);
+              if (savedUserStr) {
+                try { savedAccountProfile = JSON.parse(savedUserStr); } catch (e) { console.error(e); }
+              }
+
+              let accountGallery: DiscoveredPlant[] = [];
+              const savedGalleryStr = localStorage.getItem(`detektif_kebun_gallery_${accountKey}`);
+              if (savedGalleryStr) {
+                try { accountGallery = JSON.parse(savedGalleryStr); } catch (e) { console.error(e); }
+              } else {
+                // If no account gallery exists yet, preserve current active gallery if any
+                const activeGalleryStr = localStorage.getItem("detektif_kebun_gallery");
+                if (activeGalleryStr) {
+                  try { accountGallery = JSON.parse(activeGalleryStr); } catch (e) { console.error(e); }
+                }
+              }
+              setDiscoveredGallery(accountGallery);
+
+              const savedStatsStr = localStorage.getItem(`detektif_kebun_stats_${accountKey}`);
+              if (savedStatsStr) {
+                try {
+                  const stats = JSON.parse(savedStatsStr);
+                  if (typeof stats.score === "number") setScore(stats.score);
+                  if (typeof stats.streak === "number") setStreak(stats.streak);
+                  if (typeof stats.totalCorrect === "number") setTotalCorrect(stats.totalCorrect);
+                  if (typeof stats.totalAttempted === "number") setTotalAttempted(stats.totalAttempted);
+                } catch (e) { console.error(e); }
+              }
+
               const profileData: UserProfile = {
-                name: data.name || "Detektif Rimba",
+                id: data.sub || data.email,
+                name: savedAccountProfile?.name || data.name || "Detektif Rimba",
                 email: data.email || "",
                 picture: data.picture || "",
-                avatarType: "google",
-                customAvatar: "🍀",
-                title: calculateTitle(discoveredGallery.length),
+                avatarType: savedAccountProfile?.avatarType || "google",
+                customAvatar: savedAccountProfile?.customAvatar || "🍀",
+                title: calculateTitle(accountGallery.length),
               };
+
               setUserProfile(profileData);
               setEditingName(profileData.name);
-              setSelectedAvatar("google_pic");
+              setSelectedAvatar(profileData.avatarType === "google" ? "google_pic" : (profileData.customAvatar || "🍀"));
+
+              // Store active user profile and account-specific user data
               localStorage.setItem("detektif_kebun_user", JSON.stringify(profileData));
+              localStorage.setItem(`detektif_kebun_user_${accountKey}`, JSON.stringify(profileData));
+              localStorage.setItem(`detektif_kebun_gallery_${accountKey}`, JSON.stringify(accountGallery));
+              localStorage.setItem("detektif_kebun_gallery", JSON.stringify(accountGallery));
+
               setEyangMessage(`Selamat datang kembali di rimba, Detektif ${profileData.name}! 🌟`);
               setEyangMood("proud");
-              showLifeNotification("Login Google Berhasil! ❤️");
+              showLifeNotification("Login Google Berhasil! ✨");
+              
+              // Open profile modal automatically so user can customize name & avatar as requested
+              setShowProfileModal(true);
             } else {
               setEyangMessage("Gagal masuk dengan Google. Coba lagi, ya?");
               setEyangMood("sad");
@@ -474,10 +524,11 @@ export default function HomePage() {
         fetchUserProfile(accessToken);
       }
     }
-  }, [discoveredGallery.length, calculateTitle]);
+  }, [calculateTitle]);
 
   const handleDemoLogin = () => {
     const demoProfile: UserProfile = {
+      id: "demo_user",
       name: "Detektif Nusantara",
       email: "detektif@nusantara.org",
       picture: "",
@@ -495,10 +546,13 @@ export default function HomePage() {
   };
 
   const handleGoogleLogin = () => {
-    const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
-    if (!clientId || clientId === "YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com") {
-      showLifeNotification("Demo Mode: Client ID Google belum disetel.");
-      handleDemoLogin();
+    const savedClientId = typeof window !== "undefined" ? localStorage.getItem("detektif_kebun_google_client_id") : null;
+    const envClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+    
+    const clientId = savedClientId || (envClientId && envClientId !== "YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com" ? envClientId : null);
+    
+    if (!clientId) {
+      setShowGoogleConfigModal(true);
       return;
     }
 
@@ -511,6 +565,13 @@ export default function HomePage() {
   const handleLogout = () => {
     setUserProfile(null);
     localStorage.removeItem("detektif_kebun_user");
+    localStorage.removeItem("detektif_kebun_gallery");
+    localStorage.removeItem("detektif_kebun_stats");
+    setDiscoveredGallery([]);
+    setScore(0);
+    setStreak(0);
+    setTotalCorrect(0);
+    setTotalAttempted(0);
     setEyangMessage("Kamu telah keluar. Sampai jumpa di petualangan berikutnya!");
     setEyangMood("neutral");
     showLifeNotification("Keluar Berhasil! 🚪");
@@ -527,6 +588,9 @@ export default function HomePage() {
     };
     setUserProfile(updated);
     localStorage.setItem("detektif_kebun_user", JSON.stringify(updated));
+    if (updated.email) {
+      localStorage.setItem(`detektif_kebun_user_${updated.email}`, JSON.stringify(updated));
+    }
     showLifeNotification("Profil Diperbarui! 📝");
     setShowProfileModal(false);
   };
@@ -630,11 +694,15 @@ export default function HomePage() {
   // Update stats in localStorage on change
   useEffect(() => {
     if (score === 0 && streak === 0 && totalCorrect === 0 && totalAttempted === 0) return;
+    const statsData = { score, streak, totalCorrect, totalAttempted };
     localStorage.setItem(
       "detektif_kebun_stats",
-      JSON.stringify({ score, streak, totalCorrect, totalAttempted })
+      JSON.stringify(statsData)
     );
-  }, [score, streak, totalCorrect, totalAttempted]);
+    if (userProfile?.email) {
+      localStorage.setItem(`detektif_kebun_stats_${userProfile.email}`, JSON.stringify(statsData));
+    }
+  }, [score, streak, totalCorrect, totalAttempted, userProfile?.email]);
 
   // Cycle through intro messages on click
   const handleIntroNext = () => {
@@ -798,6 +866,9 @@ export default function HomePage() {
 
         const updated = [newPlant, ...prev];
         localStorage.setItem("detektif_kebun_gallery", JSON.stringify(updated));
+        if (userProfile?.email) {
+          localStorage.setItem(`detektif_kebun_gallery_${userProfile.email}`, JSON.stringify(updated));
+        }
         return updated;
       });
     } else {
@@ -2448,6 +2519,94 @@ export default function HomePage() {
                     style={{ fontFamily: "var(--font-title)" }}
                   >
                     Ya, Menyerah
+                  </motion.button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* ── Google Client ID Configuration Modal ───────────────────── */}
+      <AnimatePresence>
+        {showGoogleConfigModal && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/75 backdrop-blur-xs">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 15 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 15 }}
+              className="card-wood-rpg max-w-md w-full relative text-center shadow-2xl border-4 border-pixel-wood"
+              style={{ imageRendering: "pixelated" }}
+            >
+              <div className="px-5 py-3.5 border-b-4 border-pixel-wood bg-pixel-moss flex items-center justify-between">
+                <div className="flex items-center gap-2 text-white">
+                  <LogIn className="w-4 h-4 text-pixel-gold" />
+                  <span className="text-section-label" style={{ fontFamily: "var(--font-title)" }}>
+                    Login Google OAuth
+                  </span>
+                </div>
+                <button
+                  onClick={() => setShowGoogleConfigModal(false)}
+                  className="text-pixel-parchment hover:text-pixel-gold transition-colors cursor-pointer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="p-6 text-pixel-dark flex flex-col gap-4 text-left">
+                <p className="text-xs leading-relaxed font-semibold">
+                  Google Client ID belum terkonfigurasi. Masukkan Google OAuth Client ID Anda (atau gunakan Mode Demo):
+                </p>
+
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-pixel-dark/80" style={{ fontFamily: "var(--font-title)" }}>
+                    Google Client ID
+                  </label>
+                  <input
+                    type="text"
+                    value={customClientIdInput}
+                    onChange={(e) => setCustomClientIdInput(e.target.value)}
+                    placeholder="xxxx-xxxx.apps.googleusercontent.com"
+                    className="input-parchment text-xs w-full p-2.5 border-2 border-pixel-wood"
+                  />
+                </div>
+
+                <div className="flex flex-col gap-2 mt-2">
+                  <motion.button
+                    onClick={() => {
+                      if (!customClientIdInput.trim()) {
+                        showLifeNotification("Harap masukkan Client ID yang valid!");
+                        return;
+                      }
+                      localStorage.setItem("detektif_kebun_google_client_id", customClientIdInput.trim());
+                      setShowGoogleConfigModal(false);
+                      handleGoogleLogin();
+                    }}
+                    className="btn-organic py-2.5 text-xs flex items-center justify-center gap-2 cursor-pointer shadow-md"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <LogIn className="w-4 h-4" />
+                    <span>Simpan & Masuk dengan Google</span>
+                  </motion.button>
+
+                  <div className="flex items-center gap-2 my-1">
+                    <div className="flex-1 h-px bg-pixel-wood/30"></div>
+                    <span className="text-[9px] uppercase font-bold text-pixel-dark/60">atau</span>
+                    <div className="flex-1 h-px bg-pixel-wood/30"></div>
+                  </div>
+
+                  <motion.button
+                    onClick={() => {
+                      setShowGoogleConfigModal(false);
+                      handleDemoLogin();
+                    }}
+                    className="py-2.5 px-3 border-2 border-pixel-wood bg-pixel-moss text-pixel-parchment hover:bg-pixel-leaf text-xs font-bold uppercase cursor-pointer shadow-md text-center"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    style={{ fontFamily: "var(--font-title)" }}
+                  >
+                    Masuk Mode Demo (Tanpa Google)
                   </motion.button>
                 </div>
               </div>
