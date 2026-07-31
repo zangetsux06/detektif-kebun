@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useCallback } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -68,6 +68,15 @@ export default function LeaderboardModal({
   const [countdown, setCountdown] = useState(300); // 5 minutes = 300s
   const [isRefreshing, setIsRefreshing] = useState(false);
 
+  const triggerRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    setCountdown(300);
+    if (onRefresh) {
+      await onRefresh();
+    }
+    setTimeout(() => setIsRefreshing(false), 800);
+  }, [onRefresh]);
+
   // 5-minute Auto Refresh Effect
   React.useEffect(() => {
     if (!open) {
@@ -78,9 +87,7 @@ export default function LeaderboardModal({
     const timer = setInterval(() => {
       setCountdown((prev) => {
         if (prev <= 1) {
-          if (onRefresh) onRefresh();
-          setIsRefreshing(true);
-          setTimeout(() => setIsRefreshing(false), 800);
+          triggerRefresh();
           return 300;
         }
         return prev - 1;
@@ -88,13 +95,10 @@ export default function LeaderboardModal({
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [open, onRefresh]);
+  }, [open, triggerRefresh]);
 
   const handleManualRefresh = () => {
-    if (onRefresh) onRefresh();
-    setIsRefreshing(true);
-    setCountdown(300);
-    setTimeout(() => setIsRefreshing(false), 800);
+    triggerRefresh();
   };
 
   // Sorted entries according to selected tab

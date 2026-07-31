@@ -232,7 +232,7 @@ export const LOCAL_RIDDLES: LocalRiddle[] = [
     ],
     category: "Pohon Hutan",
     difficulty: "sedang",
-    funFact: "Pohon jati menggugurkan seluruh daunnya di musim kering untuk mengurangi penguapan air.",
+    funFact: "Pohon ini menggugurkan seluruh daunnya di musim kering untuk mengurangi penguapan air.",
     botanicalFacts: [
       "Nama ilmiahnya Tectona grandis.",
       "Mengandung minyak alami yang membuat kayunya sangat awet dan tahan air.",

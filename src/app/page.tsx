@@ -22,7 +22,9 @@ import {
   User,
   Edit3,
   Check,
-  LogIn
+  LogIn,
+  Camera,
+  Upload
 } from "lucide-react";
 import {
   PixelFlame,
@@ -39,6 +41,7 @@ import RiddleCard from "@/components/RiddleCard";
 import ScoreBoard from "@/components/ScoreBoard";
 import BotanicalCanvas from "@/components/BotanicalCanvas";
 import FloraCollectionModal from "@/components/FloraCollectionModal";
+import ImageCropModal from "@/components/ImageCropModal";
 import LeaderboardModal, {
   LeaderboardEntry,
   DEFAULT_INITIAL_LEADERBOARD,
@@ -209,7 +212,8 @@ export default function HomePage() {
     name: string;
     email: string;
     picture: string;
-    avatarType: "google" | "custom";
+    googlePicture?: string;
+    avatarType: "google" | "custom" | "custom_image";
     customAvatar: string;
     title: string;
   }
@@ -223,6 +227,10 @@ export default function HomePage() {
   const [showSurrenderConfirm, setShowSurrenderConfirm] = useState(false);
   const [editingName, setEditingName] = useState("");
   const [selectedAvatar, setSelectedAvatar] = useState("🍀");
+  const [customUploadedImage, setCustomUploadedImage] = useState<string>("");
+  const [rawUploadedImage, setRawUploadedImage] = useState<string>("");
+  const [showCropModal, setShowCropModal] = useState<boolean>(false);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const calculateTitle = useCallback((discoveredCount: number) => {
     if (discoveredCount === 0) return "Detektif Pemula";
@@ -606,21 +614,60 @@ export default function HomePage() {
     setShowProfileModal(false);
   };
 
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      if (event.target?.result) {
+        setRawUploadedImage(event.target.result as string);
+        setShowCropModal(true);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleCropSave = (croppedDataUrl: string) => {
+    setCustomUploadedImage(croppedDataUrl);
+    setSelectedAvatar("custom_upload");
+    if (typeof window !== "undefined") {
+      localStorage.setItem("detektif_kebun_custom_avatar", croppedDataUrl);
+    }
+  };
+
   const handleSaveProfile = () => {
     if (!userProfile) return;
+    const isCustomImage = selectedAvatar === "custom_upload";
+    const isGoogle = selectedAvatar === "google_pic";
+
+    const pictureUrl = isCustomImage
+      ? customUploadedImage
+      : isGoogle
+      ? (userProfile.googlePicture || userProfile.picture)
+      : "";
+
     const updated: UserProfile = {
       ...userProfile,
       name: editingName.trim() || userProfile.name,
-      customAvatar: selectedAvatar === "google_pic" ? "🍀" : selectedAvatar,
-      avatarType: selectedAvatar === "google_pic" ? "google" : "custom"
+      picture: pictureUrl,
+      googlePicture: userProfile.googlePicture || (isGoogle ? userProfile.picture : ""),
+      customAvatar: !isGoogle && !isCustomImage ? selectedAvatar : "🍀",
+      avatarType: isCustomImage ? "custom_image" : isGoogle ? "google" : "custom"
     };
+
     setUserProfile(updated);
     localStorage.setItem("detektif_kebun_user", JSON.stringify(updated));
     if (updated.email) {
       localStorage.setItem(`detektif_kebun_user_${updated.email}`, JSON.stringify(updated));
     }
+    if (customUploadedImage && isCustomImage) {
+      localStorage.setItem("detektif_kebun_custom_avatar", customUploadedImage);
+    }
     showLifeNotification("Profil Diperbarui! 📝");
     setShowProfileModal(false);
+
+    // Sync updated profile avatar to global leaderboard!
+    saveLeaderboardRecord();
   };
 
   // Save active session state to sessionStorage on any changes
@@ -754,6 +801,26 @@ export default function HomePage() {
     };
   }, [gamePhase]);
 
+  // ─── Fetch Global Leaderboard API ─────────────────────────────────────────
+  const fetchGlobalLeaderboard = useCallback(async () => {
+    try {
+      const res = await fetch("/api/leaderboard");
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data.entries)) {
+          setLeaderboardEntries(data.entries);
+          localStorage.setItem("detektif_kebun_leaderboard", JSON.stringify(data.entries));
+        }
+      }
+    } catch (e) {
+      console.warn("Gagal mengambil leaderboard global:", e);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchGlobalLeaderboard();
+  }, [fetchGlobalLeaderboard]);
+
   // ─── Save / Update Leaderboard Record Callback ──────────────────────────────
   const saveLeaderboardRecord = useCallback(
     (
@@ -782,61 +849,36 @@ export default function HomePage() {
 
       const entryId = currentProfile.id || currentProfile.email || "demo_user";
 
-      setLeaderboardEntries((prevEntries) => {
-        const existingIndex = prevEntries.findIndex(
-          (e) => e.id === entryId || (e.email && e.email === currentProfile.email)
-        );
+      const entryToPost = {
+        id: entryId,
+        name: currentProfile.name,
+        email: currentProfile.email,
+        picture: currentProfile.picture,
+        avatarType: currentProfile.avatarType,
+        customAvatar: currentProfile.customAvatar,
+        title: currentProfile.title,
+        score: activeScore,
+        totalCorrect: activeCorrect,
+        totalAttempted: activeAttempted,
+        durationSeconds: activeDuration,
+        floraCount: activeFloraCount,
+        maxStreak: streak,
+        updatedAt: "Baru saja",
+      };
 
-        let updatedList = [...prevEntries];
-
-        if (existingIndex >= 0) {
-          const existing = updatedList[existingIndex];
-          const newScore = Math.max(existing.score, activeScore);
-          const newDuration =
-            existing.durationSeconds > 0 && activeScore <= existing.score
-              ? Math.min(existing.durationSeconds, activeDuration > 0 ? activeDuration : existing.durationSeconds)
-              : activeDuration > 0
-              ? activeDuration
-              : existing.durationSeconds;
-
-          updatedList[existingIndex] = {
-            ...existing,
-            name: currentProfile.name,
-            email: currentProfile.email,
-            picture: currentProfile.picture,
-            avatarType: currentProfile.avatarType,
-            customAvatar: currentProfile.customAvatar,
-            title: currentProfile.title,
-            score: newScore,
-            totalCorrect: Math.max(existing.totalCorrect, activeCorrect),
-            totalAttempted: Math.max(existing.totalAttempted, activeAttempted),
-            durationSeconds: newDuration,
-            floraCount: Math.max(existing.floraCount, activeFloraCount),
-            maxStreak: Math.max(existing.maxStreak, streak),
-            updatedAt: "Baru saja",
-          };
-        } else {
-          updatedList.push({
-            id: entryId,
-            name: currentProfile.name,
-            email: currentProfile.email,
-            picture: currentProfile.picture,
-            avatarType: currentProfile.avatarType,
-            customAvatar: currentProfile.customAvatar,
-            title: currentProfile.title,
-            score: activeScore,
-            totalCorrect: activeCorrect,
-            totalAttempted: activeAttempted,
-            durationSeconds: activeDuration,
-            floraCount: activeFloraCount,
-            maxStreak: streak,
-            updatedAt: "Baru saja",
-          });
-        }
-
-        localStorage.setItem("detektif_kebun_leaderboard", JSON.stringify(updatedList));
-        return updatedList;
-      });
+      fetch("/api/leaderboard", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ entry: entryToPost }),
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          if (Array.isArray(data.entries)) {
+            setLeaderboardEntries(data.entries);
+            localStorage.setItem("detektif_kebun_leaderboard", JSON.stringify(data.entries));
+          }
+        })
+        .catch((err) => console.warn("Error posting to global leaderboard:", err));
     },
     [score, totalCorrect, totalAttempted, sessionDuration, discoveredGallery.length, userProfile, calculateTitle, streak]
   );
@@ -2561,8 +2603,10 @@ export default function HomePage() {
                 {/* Avatar Display */}
                 <div className="flex flex-col items-center gap-3 mt-2">
                   <div className="relative w-20 h-20 border-4 border-pixel-gold bg-[#12130e] flex items-center justify-center overflow-hidden p-1 shadow-[0_0_15px_rgba(0,0,0,0.5)]" style={{ imageRendering: "pixelated" }}>
-                    {selectedAvatar === "google_pic" && userProfile.picture ? (
-                      <Image src={userProfile.picture} alt="Google Profile" width={80} height={80} className="w-full h-full object-cover" unoptimized />
+                    {selectedAvatar === "custom_upload" && customUploadedImage ? (
+                      <Image src={customUploadedImage} alt="Custom Profile" width={80} height={80} className="w-full h-full object-cover" unoptimized />
+                    ) : selectedAvatar === "google_pic" && (userProfile.googlePicture || userProfile.picture) ? (
+                      <Image src={userProfile.googlePicture || userProfile.picture} alt="Google Profile" width={80} height={80} className="w-full h-full object-cover" unoptimized />
                     ) : (
                       <PixelAvatar char={selectedAvatar} size={48} />
                     )}
@@ -2596,12 +2640,42 @@ export default function HomePage() {
                 {/* Avatar Selector */}
                 <div className="flex flex-col gap-2.5 w-full">
                   <label className="text-[10px] font-bold uppercase tracking-wider text-pixel-dark/80 block pl-6" style={{ fontFamily: "var(--font-title)" }}>
-                    Pilih Avatar Spesimen (8-Bit)
+                    Pilih Avatar / Unggah Foto
                   </label>
                   <div className="flex flex-wrap gap-3 pl-4">
+                    {/* Upload Custom Image Option */}
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className={`w-14 h-14 border-4 cursor-pointer overflow-hidden flex flex-col items-center justify-center p-1 transition-all duration-150 ease-out hover:scale-105 ${
+                        selectedAvatar === "custom_upload" && customUploadedImage
+                          ? "border-pixel-gold bg-pixel-moss shadow-[0_0_15px_rgba(201,162,39,0.8)] ring-2 ring-pixel-gold/40"
+                          : "border-pixel-wood bg-[#12130e] hover:border-pixel-gold/70"
+                      }`}
+                      style={{ imageRendering: "pixelated" }}
+                      title="Unggah Foto dari HP / Laptop (Bisa Potong)"
+                    >
+                      {customUploadedImage ? (
+                        <Image src={customUploadedImage} alt="Custom" width={56} height={56} className="w-full h-full object-cover" unoptimized />
+                      ) : (
+                        <div className="flex flex-col items-center text-[#fde68a]">
+                          <Camera className="w-5 h-5 text-pixel-gold" />
+                          <span className="text-[7px] font-bold mt-0.5" style={{ fontFamily: "var(--font-title)" }}>UNGGAH</span>
+                        </div>
+                      )}
+                    </button>
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleFileSelect}
+                    />
+
                     {/* Google Pic option if logged in via google */}
-                    {userProfile.picture && (
+                    {(userProfile.googlePicture || userProfile.picture) && (
                       <button
+                        type="button"
                         onClick={() => setSelectedAvatar("google_pic")}
                         className={`w-14 h-14 border-4 cursor-pointer overflow-hidden flex items-center justify-center p-0.5 transition-all duration-150 ease-out hover:scale-105 ${
                           selectedAvatar === "google_pic"
@@ -2609,9 +2683,9 @@ export default function HomePage() {
                             : "border-pixel-wood bg-[#12130e] hover:border-pixel-gold/70"
                         }`}
                         style={{ imageRendering: "pixelated" }}
-                        title="Foto Google"
+                        title="Foto Akun Google"
                       >
-                        <Image src={userProfile.picture} alt="Google" width={56} height={56} className="w-full h-full object-cover" unoptimized />
+                        <Image src={userProfile.googlePicture || userProfile.picture} alt="Google" width={56} height={56} className="w-full h-full object-cover" unoptimized />
                       </button>
                     )}
                     {PIXEL_AVATARS.map((av) => {
@@ -2619,6 +2693,7 @@ export default function HomePage() {
                       return (
                         <button
                           key={av.id || av.char}
+                          type="button"
                           onClick={() => setSelectedAvatar(av.char)}
                           className={`w-14 h-14 border-4 cursor-pointer flex items-center justify-center p-2 transition-all duration-150 ease-out hover:scale-105 ${
                             isSelected
@@ -2838,19 +2913,15 @@ export default function HomePage() {
         currentUserEmail={userProfile?.email}
         isLoggedIn={!!userProfile}
         onLoginTrigger={handleGoogleLogin}
-        onRefresh={() => {
-          const savedLb = localStorage.getItem("detektif_kebun_leaderboard");
-          if (savedLb) {
-            try {
-              const parsed = JSON.parse(savedLb);
-              if (Array.isArray(parsed) && parsed.length > 0) {
-                setLeaderboardEntries(parsed);
-              }
-            } catch (e) {
-              console.error("Gagal load leaderboard", e);
-            }
-          }
-        }}
+        onRefresh={fetchGlobalLeaderboard}
+      />
+
+      {/* ── Custom Image Crop Modal ────────────────────────────────────── */}
+      <ImageCropModal
+        open={showCropModal}
+        imageSrc={rawUploadedImage}
+        onClose={() => setShowCropModal(false)}
+        onCropSave={handleCropSave}
       />
     </div>
   );
