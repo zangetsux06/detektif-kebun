@@ -1,17 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { generateWithCascade, formatGeminiErrorSummary } from "@/lib/gemini";
 import { LOCAL_RIDDLES, getPlantFirstLetter } from "@/lib/riddles";
+import { getNormalizedPlantKey } from "@/components/BotanicalCanvas";
 export { LOCAL_RIDDLES };
 
 export const dynamic = "force-dynamic";
 
 const FLORA_POOL = [
-  "Rafflesia arnoldii", "Bunga Bangkai", "Kantong Semar (Nepenthes)", "Melati Putih",
-  "Anggrek Bulan", "Kayu Cendana", "Pohon Ulin (Kayu Besi)", "Pohon Damar",
-  "Pohon Jati", "Pohon Mahoni", "Pohon Trembesi", "Bambu Betung",
-  "Kapur Barus", "Kenanga", "Bunga Cempaka", "Edelweiss Jawa",
-  "Pohon Meranti", "Pohon Gaharu", "Rotan", "Teratai Raksasa (Nymphaea)",
-  "Pohon Pinus Merkusi", "Buah Merah Papua", "Daun Sirih", "Pohon Sagu"
+  "Rafflesia", "Kantong Semar", "Bunga Bangkai", "Melati",
+  "Anggrek Bulan", "Kenanga", "Teratai", "Rotan",
+  "Kayu Putih", "Bambu", "Mangrove", "Jati",
+  "Cempaka", "Karet", "Durian"
 ];
 
 export function scrubSpoilers(text: string, plantName: string): string {
@@ -71,8 +70,13 @@ export async function GET(request: NextRequest) {
     console.warn("Gagal parse searchParams:", e);
   }
 
+  const normalizedExcluded = excludedPlants.map(p => getNormalizedPlantKey(p).toLowerCase());
+
   try {
-    let availableFlora = FLORA_POOL.filter(p => !excludedPlants.includes(p.toLowerCase()));
+    let availableFlora = FLORA_POOL.filter(p => {
+      const norm = getNormalizedPlantKey(p).toLowerCase();
+      return !excludedPlants.includes(p.toLowerCase()) && !normalizedExcluded.includes(norm);
+    });
     if (availableFlora.length === 0) {
       availableFlora = FLORA_POOL;
     }
@@ -146,7 +150,10 @@ PENTING:
     const summary = formatGeminiErrorSummary(error);
     console.warn(`⚠️ Beralih ke Fallback Database Lokal: ${summary}`);
     
-    let availableLocal = LOCAL_RIDDLES.filter(r => !excludedPlants.includes(r.plantName.toLowerCase()));
+    let availableLocal = LOCAL_RIDDLES.filter(r => {
+      const norm = getNormalizedPlantKey(r.plantName).toLowerCase();
+      return !excludedPlants.includes(r.plantName.toLowerCase()) && !normalizedExcluded.includes(norm);
+    });
     if (availableLocal.length === 0) {
       availableLocal = LOCAL_RIDDLES;
     }

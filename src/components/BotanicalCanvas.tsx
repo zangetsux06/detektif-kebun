@@ -104,6 +104,7 @@ function MiniLeafParticle({ index }: { index: number }) {
 const svgDataCache: Record<string, BotanicalSVGData> = {};
 
 // ─── Mapping nama tumbuhan → file sketsa botani di /public/flora/sketch/ ─────
+// ─── Mapping nama tumbuhan → file sketsa botani di /public/flora/sketch/ ─────
 const PLANT_SKETCH_MAP: Record<string, string> = {
   "Rafflesia":       "/flora/sketch/sketch_rafflesia.png",
   "Kantong Semar":   "/flora/sketch/full_screen_scientific_botanical_illustration_of_tropical_pitcher_plant_kantong.png",
@@ -120,6 +121,12 @@ const PLANT_SKETCH_MAP: Record<string, string> = {
   "Karet":           "/flora/sketch/sketch_karet_botanical_illustration.png",
   "Durian":          "/flora/sketch/sketch_durian_botanical_illustration.png",
   "Anggrek Bulan":   "/flora/sketch/sketch_anggrek_bulan.png",
+  "Cendana":         "/flora/sketch/sketch_cempaka_botanical_illustration.png",
+  "Kayu Cendana":    "/flora/sketch/sketch_cempaka_botanical_illustration.png",
+  "Pohon Damar":     "/flora/sketch/sketch_karet_botanical_illustration.png",
+  "Damar":           "/flora/sketch/sketch_karet_botanical_illustration.png",
+  "Pohon Ulin":      "/flora/sketch/sketch_jati_botanical_illustration.png",
+  "Ulin":            "/flora/sketch/sketch_jati_botanical_illustration.png",
 };
 
 // ─── Mapping nama tumbuhan → file ikon pixel art di /public/flora/icon/ ──────
@@ -139,47 +146,32 @@ const PLANT_ICON_MAP: Record<string, string> = {
   "Karet":           "/flora/icon/icon_pohon_karet.png",
   "Durian":          "/flora/icon/icon_buah_durian.png",
   "Anggrek Bulan":   "/flora/icon/icon_anggrek_bulan.png",
+  "Cendana":         "/flora/icon/icon_bunga_cempaka.png",
+  "Pohon Damar":     "/flora/icon/icon_pohon_karet.png",
+  "Pohon Ulin":      "/flora/icon/icon_pohon_jati.png",
 };
 
 export function getNormalizedPlantKey(name: string): string {
   if (!name) return "";
-  const lowerName = name.toLowerCase();
+  const lowerName = name.toLowerCase().replace(/[^a-z0-9\s]/g, " ").trim();
 
-  const officialKeys = [
-    "Anggrek Bulan",
-    "Bunga Bangkai",
-    "Kantong Semar",
-    "Rafflesia",
-    "Melati",
-    "Kenanga",
-    "Teratai",
-    "Rotan",
-    "Kayu Putih",
-    "Bambu",
-    "Mangrove",
-    "Jati",
-    "Cempaka",
-    "Karet",
-    "Durian"
-  ];
+  if (lowerName.includes("rafflesia") || lowerName.includes("patma")) return "Rafflesia";
+  if (lowerName.includes("semar") || lowerName.includes("nepenthes") || lowerName.includes("periuk kera")) return "Kantong Semar";
+  if (lowerName.includes("bangkai") || lowerName.includes("titan") || lowerName.includes("amorphophallus") || lowerName.includes("suweg")) return "Bunga Bangkai";
+  if (lowerName.includes("anggrek") || lowerName.includes("phalaenopsis")) return "Anggrek Bulan";
+  if (lowerName.includes("melati") || lowerName.includes("jasminum") || lowerName.includes("menur")) return "Melati";
+  if (lowerName.includes("kenanga") || lowerName.includes("ylang") || lowerName.includes("cananga")) return "Kenanga";
+  if (lowerName.includes("teratai") || lowerName.includes("lotus") || lowerName.includes("nymphaea")) return "Teratai";
+  if (lowerName.includes("rotan") || lowerName.includes("calamus")) return "Rotan";
+  if (lowerName.includes("kayu putih") || lowerName.includes("eucalyptus") || lowerName.includes("melaleuca")) return "Kayu Putih";
+  if (lowerName.includes("bambu") || lowerName.includes("pring") || lowerName.includes("petung")) return "Bambu";
+  if (lowerName.includes("bakau") || lowerName.includes("mangrove") || lowerName.includes("rhizophora")) return "Mangrove";
+  if (lowerName.includes("jati") || lowerName.includes("ulin") || lowerName.includes("gaharu") || lowerName.includes("meranti") || lowerName.includes("pinus") || lowerName.includes("mahoni") || lowerName.includes("trembesi")) return "Jati";
+  if (lowerName.includes("cempaka") || lowerName.includes("cendana") || lowerName.includes("magnolia") || lowerName.includes("santalum")) return "Cempaka";
+  if (lowerName.includes("karet") || lowerName.includes("damar") || lowerName.includes("agathis") || lowerName.includes("hevea")) return "Karet";
+  if (lowerName.includes("durian") || lowerName.includes("durio")) return "Durian";
 
-  for (const key of officialKeys) {
-    if (lowerName.includes(key.toLowerCase())) {
-      return key;
-    }
-  }
-
-  // Word-by-word fallback matching
-  if (lowerName.includes("rafflesia")) return "Rafflesia";
-  if (lowerName.includes("semar")) return "Kantong Semar";
-  if (lowerName.includes("melati")) return "Melati";
-  if (lowerName.includes("anggrek")) return "Anggrek Bulan";
-  if (lowerName.includes("bambu")) return "Bambu";
-  if (lowerName.includes("jati")) return "Jati";
-  if (lowerName.includes("rotan")) return "Rotan";
-  if (lowerName.includes("bakau") || lowerName.includes("mangrove")) return "Mangrove";
-
-  return name;
+  return "Jati";
 }
 
 export function formatPlantName(name: string) {

@@ -14,7 +14,7 @@ export interface LocalRiddle {
 
 export const LOCAL_RIDDLES: LocalRiddle[] = [
   {
-    plantName: "Kantong Semar (Nepenthes)",
+    plantName: "Kantong Semar",
     riddle: "Aku tumbuh merambat di tanah miskin hara. Bentuk tubuhku mirip cangkir bertutup yang menawan hati. Namun waspadalah para serangga kecil, sekali terpeleset ke dalam cairanku yang manis, kamu takkan pernah kembali ke angkasa.",
     clues: [
       "Aku tumbuh di rawa atau lereng gunung dengan tanah masam yang miskin nitrogen.",
@@ -33,7 +33,7 @@ export const LOCAL_RIDDLES: LocalRiddle[] = [
     localNames: ["Semar Mego", "Periuk Kera", "Ketuyut"]
   },
   {
-    plantName: "Rafflesia arnoldii",
+    plantName: "Rafflesia",
     riddle: "Aku adalah raksasa yang tak memiliki daun, batang, maupun akar sejati. Aku hidup menumpang pada tumbuhan merambat di kegelapan lantai hutan. Saat mekar, diameter mahkotaku bisa mencapai satu meter, menyebarkan aroma busuk yang mengundang lalat pembantu penyerbukan.",
     clues: [
       "Aku tidak memiliki daun, batang, maupun akar sejati karena aku adalah tumbuhan parasit obligat.",
@@ -71,7 +71,7 @@ export const LOCAL_RIDDLES: LocalRiddle[] = [
     localNames: ["Titan Arum", "Suweg Raksasa", "Bunga Bangkai"]
   },
   {
-    plantName: "Melati Putih",
+    plantName: "Melati",
     riddle: "Mahkotaku mungil berwarna seputih salju, melambangkan kesucian dan ketulusan hati. Keharumanku merebak lembut di malam hari, sering kali menghiasi rambut pengantin dalam upacara adat tradisional Nusantara.",
     clues: [
       "Bungaku berukuran kecil, berwarna seputih salju, dan melambangkan lambang kesucian.",
@@ -109,61 +109,194 @@ export const LOCAL_RIDDLES: LocalRiddle[] = [
     localNames: ["Anggrek Meneer", "Puspa Pesona"]
   },
   {
-    plantName: "Kayu Cendana",
-    riddle: "Batang kayuku menyimpan aroma wangi abadi yang menenangkan jiwa. Minyak essensial dari tubuhku telah dicari para pedagang dunia sejak ratusan tahun lalu. Aku tumbuh perlahan di tanah berbatu Nusa Tenggara, memberikan keharuman yang tak pudar oleh waktu.",
+    plantName: "Kenanga",
+    riddle: "Bungaku helai-helai panjang berwarna hijau kekuningan yang terkulai anggun. Keharuman minyak atsiri dari mahkotaku sangat harum merebak, sering dijadikan racikan parfum termasyhur dan taburan bunga selamat datang.",
     clues: [
-      "Aku adalah pohon penghasil kayu harum khas dari Nusa Tenggara Timur.",
-      "Kayu dan minyakku digunakan sebagai bahan dupa, parfum mewah, serta ukiran kerajinan.",
-      "Akarku memerlukan tanaman inang lain saat masih muda untuk menyerap hara (parasit fakultatif)."
+      "Bungaku berbentuk helai-helai memanjang yang menjuntai terkulai halus.",
+      "Minyak dari tubuhku (Ylang-Ylang) diekspor untuk bahan dasar parfum internasional.",
+      "Bunganya berubah warna dari hijau muda menjadi kuning keemasan saat matang wangi."
+    ],
+    category: "Tanaman Hias",
+    difficulty: "mudah",
+    funFact: "Minyak ekstrak kenanga dikenal secara global dengan nama Ylang-Ylang oil.",
+    botanicalFacts: [
+      "Nama ilmiahnya Cananga odorata.",
+      "Aroma bunganya sangat kuat pada sore dan malam hari.",
+      "Pohonnya dapat tumbuh sangat tinggi jika dibiarkan di alam liar."
+    ],
+    habitat: "Hutan hujan dataran rendah dan pekarangan rumah tropis.",
+    localNames: ["Ylang-Ylang", "Nanga", "Kanananga"]
+  },
+  {
+    plantName: "Teratai",
+    riddle: "Daunku bundar lebar mengapung tenang di atas permukaan air tenang. Bungaku mekar anggun menjulang di atas air, menghadirkan kedamaian dan keindahan murni di tengah danau maupun kolam.",
+    clues: [
+      "Aku hidup mengapung di perairan tenang seperti danau, kolam, atau rawa.",
+      "Daunku lebar melingkar dilapisi lapisan lilin kedap air.",
+      "Bungaku mekar anggun di atas tangkai air berwarna putih, merah muda, atau ungu."
+    ],
+    category: "Tanaman Air",
+    difficulty: "sedang",
+    funFact: "Bunga teratai mekar di pagi hari dan menguncup rapat kembali saat sore menjelang malam.",
+    botanicalFacts: [
+      "Memiliki nama ilmiah Nymphaea.",
+      "Rongga udara di dalam tangkainya membantu sirkulasi oksigen ke akar di dasar lumpur.",
+      "Sering menjadi simbol kemurnian dan keindahan dalam berbagai budaya."
+    ],
+    habitat: "Perairan tawar tenang, danau, rawa, dan kolam.",
+    localNames: ["Lotus", "Tarate", "Seroja"]
+  },
+  {
+    plantName: "Rotan",
+    riddle: "Batangku fleksibel berduri tajam merambat liar memanjat kanopi hutan. Meskipun berduri menyergat di alam liar, kayuku yang lentur dan kuat telah dianyam menjadi perabot mebel bermutu tinggi ke seluruh penjuru dunia.",
+    clues: [
+      "Aku adalah tumbuhan palma merambat yang batang bagian luarnya dipenuhi duri tajam.",
+      "Batangku sangat lentur, relatif ringan, namun sangat kuat dan tidak mudah patah.",
+      "Banyak dimanfaatkan untuk kerajinan anyaman mebel, kursi, dan perabot rumah."
     ],
     category: "Pohon Hutan",
     difficulty: "sedang",
-    funFact: "Aroma wangi kayu cendana bisa bertahan hingga puluhan tahun bahkan setelah direbahkan.",
+    funFact: "Indonesia merupakan negara penghasil rotan terbesar di dunia (sekitar 80% pasokan global).",
     botanicalFacts: [
-      "Nama ilmiahnya Santalum album.",
-      "Merupakan salah satu kayu termahal di dunia karena kandungan minyak santalol.",
-      "Membutuhkan tanaman inang pendamping untuk tumbuh maksimal saat persemaian."
+      "Termasuk dalam famili Arecaceae (suku pinang-pinangan).",
+      "Memiliki duri cambuk (flagellum) untuk mengait dahan pohon lain saat memanjat.",
+      "Dapat tumbuh memanjang hingga puluhan meter di lantai hutan."
     ],
-    habitat: "Daerah kering dan berbatu dengan musim kemarau tegas di Nusa Tenggara Timur.",
-    localNames: ["Cendana Wangi", "Hau Seni"]
+    habitat: "Hutan hujan tropis basah di Kalimantan, Sumatra, dan Sulawesi.",
+    localNames: ["Calamus", "Penjalin", "Uwi"]
   },
   {
-    plantName: "Pohon Ulin (Kayu Besi)",
-    riddle: "Aku adalah raksasa tangguh penjelajah zaman dari hutan Kalimantan. Tubuhku begitu padat dan berat hingga tenggelam di dalam air. Batang kayuku tak membusuk oleh guyuran hujan maupun rayap, menjadikanku sang Kayu Besi pelindung Nusantara.",
+    plantName: "Kayu Putih",
+    riddle: "Kulit batangku berlapis-lapis tipis menyerupai kertas yang mudah mengelupas. Dari remasan daunku, keluar aroma minyak hangat yang menyejukkan tubuh dan meredakan masuk angin keluarga Indonesia.",
     clues: [
-      "Aku dikenal sebagai Kayu Besi dari Kalimantan karena ketahanan kayunya yang luar biasa.",
-      "Kayuku begitu padat hingga tenggelam jika dimasukkan ke dalam air laut maupun air tawar.",
-      "Tahan terhadap air laut, perubahan cuaca ekstrem, dan serangan rayap tanpa perlu diawetkan."
-    ],
-    category: "Pohon Hutan",
-    difficulty: "sulit",
-    funFact: "Pohon ulin tumbuh sangat lambat, membutuhkan waktu hingga ratusan tahun untuk mencapai diameter satu meter.",
-    botanicalFacts: [
-      "Nama ilmiahnya Eusideroxylon zwageri.",
-      "Tumbuhan endemik hutan hujan tropis Kalimantan dan Sumatra.",
-      "Kerap dimanfaatkan untuk konstruksi jembatan, sirap rumah, dan tiang tiang dermaga."
-    ],
-    habitat: "Hutan dataran rendah tropis basah hingga ketinggian 400 meter di atas permukaan laut.",
-    localNames: ["Kayu Besi", "Bulian", "Onglen"]
-  },
-  {
-    plantName: "Pohon Damar",
-    riddle: "Tinggi batangku menjulang lurus menembus kanopi hutan tropis. Dari torehan batangku, keluar getah bening mengeras yang berkilau bagaikan kristal. Getahku menerangi kegelapan malam sebagai bahan pelapis damar kuno dan industri cat modern.",
-    clues: [
-      "Aku adalah pohon konifer asli Nusantara penghasil getah kopal/damar berkilau.",
-      "Batangku lurus dan sangat tinggi, sering dimanfaatkan sebagai pohon penghijauan.",
-      "Getahku diolah menjadi vernis, bahan cat, kopal, dan pelapis kertas."
+      "Kulit batangku berwarna keputihan dan mengelupas seperti helai-helai kertas.",
+      "Daunku diekstrak melalui penyulingan menjadi minyak penghangat tubuh yang sangat populer.",
+      "Tumbuhan ini banyak dibudidayakan di Pulau Buru dan Maluku."
     ],
     category: "Pohon Hutan",
     difficulty: "mudah",
-    funFact: "Getah damar telah diekspor ke berbagai belahan dunia sejak zaman Jalur Rempah kuno.",
+    funFact: "Minyak penghangat alami dari tanaman ini diproduksi melalui proses penyulingan uap dari daun dan rantingnya.",
     botanicalFacts: [
-      "Nama ilmiahnya Agathis dammara.",
-      "Dapat tumbuh mencapai tinggi lebih dari 60 meter.",
-      "Biji dihasilkan dari runjung (cone) bulat bersisik."
+      "Nama ilmiahnya Melaleuca leucadendra.",
+      "Mengandung senyawa cineole yang memberikan efek hangat dan antiseptik.",
+      "Tahan terhadap kebakaran hutan ringan karena kulit batangnya yang tebal berlapis."
     ],
-    habitat: "Hutan pegunungan tropis basah di Maluku, Sulawesi, hingga Papua.",
-    localNames: ["Kopal", "Damar Minyak", "Ki Damar"]
+    habitat: "Hutan terbuka, savana, dan lahan marginal beriklim tropis.",
+    localNames: ["Gelam", "Kayu Gelam", "Minyak Kayu Putih"]
+  },
+  {
+    plantName: "Bambu",
+    riddle: "Batangku berongga ruas demi ruas, tumbuh menjulang cepat bagai anak panah menuju langit. Rebung mudaku lezat dimasak, sedangkan batang tuaku yang kokoh menjadi bahan bangunan dan kerajinan bambu khas Nusantara.",
+    clues: [
+      "Aku tumbuh membentuk rumpun kokoh dengan batang berongga beruas-ruas.",
+      "Tunas mudaku (rebung) biasa diolah menjadi hidangan lezat khas daerah.",
+      "Merupakan salah satu tumbuhan dengan laju pertumbuhan tercepat di dunia."
+    ],
+    category: "Pohon Hutan",
+    difficulty: "mudah",
+    funFact: "Beberapa jenis bambu dapat tumbuh hingga 90 cm hanya dalam waktu 24 jam!",
+    botanicalFacts: [
+      "Termasuk dalam famili Poaceae (rumput-rumputan raksasa).",
+      "Akar serabutnya yang rapat sangat efektif mencegah erosi dan tanah longsor.",
+      "Digunakan untuk bahan alat musik tradisional seperti angklung dan seruling."
+    ],
+    habitat: "Tepi sungai, lereng bukit, dan lahan tropis lembap.",
+    localNames: ["Pring", "Aur", "Buluh"]
+  },
+  {
+    plantName: "Mangrove",
+    riddle: "Akarku mencuat tinggi menyangga batang di atas lumpur muara dan sapuan ombak laut. Aku berdiri sebagai benteng alami pelindung pesisir dari abrasi, serta tempat naungan aman bagi benih ikan dan kepiting pantai.",
+    clues: [
+      "Aku tumbuh berkelompok di zona pasang surut air laut dan muara sungai.",
+      "Memiliki akar tunjang atau akar napas yang mencuat kokoh dari dalam lumpur.",
+      "Berfungsi penting mencerap emosi abrasi ombak laut dan menyimpan karbon biru."
+    ],
+    category: "Tanaman Pesisir",
+    difficulty: "sedang",
+    funFact: "Hutan mangrove Indonesia menyimpan salah satu cadangan karbon terbesar di planet bumi.",
+    botanicalFacts: [
+      "Nama ilmiah populernya Rhizophora.",
+      "Memiliki mekanisme khusus untuk menyaring garam dari air laut melalui akarnya.",
+      "Buahnya (viviparous seed) dapat berkecambah saat masih menempel di pohon."
+    ],
+    habitat: "Pesisir pantai tropis berlumpur dan muara sungai pasang surut.",
+    localNames: ["Bakau", "Panggang", "Canting"]
+  },
+  {
+    plantName: "Jati",
+    riddle: "Daunku lebar gugur di musim kemarau panjang untuk menghemat air kehidupan. Batang kayu cokelat keemasanku sangat megah, padat, dan tahan puluhan tahun, menjadikanku raja kayu bahan furnitur dan kapal Nusantara.",
+    clues: [
+      "Aku meluruhkan daunku (meranggas) saat musim kemarau tiba.",
+      "Kayuku berwarna cokelat keemasan dengan serat indah, tahan rayap dan cuaca.",
+      "Sangat terkenal sebagai bahan utama mebel ukir Jepara berkualitas dunia."
+    ],
+    category: "Pohon Hutan",
+    difficulty: "sedang",
+    funFact: "Pohon jati menggugurkan seluruh daunnya di musim kering untuk mengurangi penguapan air.",
+    botanicalFacts: [
+      "Nama ilmiahnya Tectona grandis.",
+      "Mengandung minyak alami yang membuat kayunya sangat awet dan tahan air.",
+      "Membutuhkan waktu puluhan tahun untuk mencapai kematangan kayu terbaik."
+    ],
+    habitat: "Hutan musim dataran rendah beriklim monsun tropis.",
+    localNames: ["Teak", "Jatos", "Djati"]
+  },
+  {
+    plantName: "Cempaka",
+    riddle: "Bungaku berbentuk mahkota ramping berwarna kuning keemasan atau putih bersih dengan wangi semerbak harum menyejukkan. Dahulu kerap ditanam di sekitar istana kerajaan dan pekarangan rumah tradisional.",
+    clues: [
+      "Bungaku berwarna kuning keemasan atau putih dengan aroma wangi yang sangat harum.",
+      "Merupakan flora identitas (maskot) dari Provinsi Aceh (Cempaka Kuning/Bungong Jeumpa).",
+      "Aroma bunganya sering digunakan untuk wewangian tradisional dan upacara adat."
+    ],
+    category: "Tanaman Hias",
+    difficulty: "mudah",
+    funFact: "Bunga ini diabadikan dalam lagu daerah Aceh yang sangat terkenal, 'Bungong Jeumpa'.",
+    botanicalFacts: [
+      "Nama ilmiahnya Magnolia champaca.",
+      "Pohonnya dapat tumbuh menjadi pohon peneduh yang rindang.",
+      "Minyak aromatik bunganya digunakan dalam industri wewangian premium."
+    ],
+    habitat: "Hutan hujan tropis basah dan pekarangan rumah.",
+    localNames: ["Bungong Jeumpa", "Cempaka Kuning", "Kantil"]
+  },
+  {
+    plantName: "Karet",
+    riddle: "Batangku ditoreh berulir oleh para petani di pagi buta. Dari torehan itu, mengalir cairan getah putih susu (lateks) yang ditampung dalam mangkuk kecil untuk diolah menjadi ban kendaraan dan ban berjalan industri dunia.",
+    clues: [
+      "Dari batangku yang ditoreh miring, mengalir cairan lateks berwarna putih susu.",
+      "Lateks dari tubuhku diolah menjadi bahan baku utama karet alam cair dan ban.",
+      "Banyak ditanam dalam perkebunan luas di Sumatra dan Kalimantan."
+    ],
+    category: "Perkebunan",
+    difficulty: "sedang",
+    funFact: "Getah alami (lateks) dari pohon ini dipanen dengan cara menyadap atau menoreh kulit batangnya.",
+    botanicalFacts: [
+      "Nama ilmiahnya Hevea brasiliensis.",
+      "Biji pohon ini dapat meletup keras dari buahnya yang masak saat siap menyebar.",
+      "Indonesia adalah salah satu produsen getah alam terbesar di dunia."
+    ],
+    habitat: "Perkebunan tropis dataran rendah dengan curah hujan tinggi.",
+    localNames: ["Para", "Pohon Karet", "Lateks"]
+  },
+  {
+    plantName: "Durian",
+    riddle: "Kulit buahku dipenuhi duri-duri tajam melingkar bagai perisai baja. Namun di balik zirah berduriku, tersembunyi daging buah berwarna kuning keemasan yang manis, legit, dan beraroma tajam menyengat, menjadikanku Sang Raja Buah Tropis.",
+    clues: [
+      "Kulit luar buahku tajam berduri keras dan aroma buahku sangat menyengat khas.",
+      "Dijuluki secara internasional sebagai 'King of Fruits' (Raja Buah).",
+      "Daging buahku berwarna kuning/krem dengan rasa manis legit yang sangat kaya."
+    ],
+    category: "Buah Tropis",
+    difficulty: "sulit",
+    funFact: "Aroma tajam dari buah ini membuatnya dilarang dibawa ke dalam beberapa hotel dan transportasi umum di Asia.",
+    botanicalFacts: [
+      "Nama ilmiahnya Durio zibethinus.",
+      "Bunganya mekar di malam hari dan diserbuki oleh kelelawar kecil (chiropterophily).",
+      "Pohonnya dapat mencapai tinggi puluhan meter di hutan hujan."
+    ],
+    habitat: "Hutan tropis basah dataran rendah hingga ketinggian menengah.",
+    localNames: ["Duren", "Raja Buah", "King of Fruits"]
   }
 ];
 
@@ -178,7 +311,7 @@ export function getPlantFirstLetter(plantName: string): string {
   if (words.length === 0) return "A";
   
   // Generic prefix words to skip if there are additional words (e.g. Pohon Gaharu -> Gaharu)
-  const prefixesToSkip = new Set(["pohon", "bunga", "tanaman", "kayu"]);
+  const prefixesToSkip = new Set(["pohon", "bunga", "tanaman"]);
   
   let targetWord = words[0];
   if (words.length > 1 && prefixesToSkip.has(words[0].toLowerCase())) {
@@ -189,11 +322,19 @@ export function getPlantFirstLetter(plantName: string): string {
   return /[A-Z0-9]/.test(firstChar) ? firstChar : "A";
 }
 
+import { getNormalizedPlantKey } from "@/components/BotanicalCanvas";
+
 export function getClientFallbackRiddle(excludedPlants: string[] = []) {
   const excludedLower = excludedPlants.map((p) => p.toLowerCase());
-  let available = LOCAL_RIDDLES.filter(
-    (r) => !excludedLower.includes(r.plantName.toLowerCase())
-  );
+  const excludedNormalized = excludedPlants.map((p) => getNormalizedPlantKey(p).toLowerCase());
+
+  let available = LOCAL_RIDDLES.filter((r) => {
+    const norm = getNormalizedPlantKey(r.plantName).toLowerCase();
+    return (
+      !excludedLower.includes(r.plantName.toLowerCase()) &&
+      !excludedNormalized.includes(norm)
+    );
+  });
   if (available.length === 0) {
     available = LOCAL_RIDDLES;
   }
