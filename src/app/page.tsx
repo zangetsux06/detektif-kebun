@@ -820,27 +820,14 @@ export default function HomePage() {
         const res = await fetch("/api/leaderboard");
         if (res.ok && !ignore) {
           const data = await res.json();
-          if (Array.isArray(data.entries) && data.entries.length > 0 && !ignore) {
-            setLeaderboardEntries(data.entries);
-            localStorage.setItem("detektif_kebun_leaderboard", JSON.stringify(data.entries));
-          } else {
-            // Check local storage to restore existing local entries and sync to server
-            const savedLb = localStorage.getItem("detektif_kebun_leaderboard");
-            if (savedLb) {
-              try {
-                const parsed = JSON.parse(savedLb);
-                if (Array.isArray(parsed) && parsed.length > 0 && !ignore) {
-                  setLeaderboardEntries(parsed);
-                  fetch("/api/leaderboard", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ entries: parsed }),
-                  }).catch(() => {});
-                }
-              } catch (e) {
-                console.warn(e);
-              }
-            }
+          if (Array.isArray(data.entries) && !ignore) {
+            const dummyIds = new Set(["eyang_rimba", "kapitan_botanis", "pakar_rimba"]);
+            const dummyNames = new Set(["Eyang Rimba Agung", "Kapitan Botanis", "Rani Sumatra"]);
+            const cleanEntries = data.entries.filter(
+              (e: LeaderboardEntry) => e && e.id && !dummyIds.has(e.id) && !dummyNames.has(e.name)
+            );
+            setLeaderboardEntries(cleanEntries);
+            localStorage.setItem("detektif_kebun_leaderboard", JSON.stringify(cleanEntries));
           }
         }
       } catch (e) {

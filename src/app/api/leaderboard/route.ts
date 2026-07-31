@@ -25,7 +25,15 @@ export const dynamic = "force-dynamic";
 const DATA_DIR = process.env.NODE_ENV === "production" ? "/tmp" : path.join(process.cwd(), ".data");
 const FILE_PATH = path.join(DATA_DIR, "global_leaderboard.json");
 
-const SEED_LEADERBOARD: LeaderboardEntry[] = [];
+const DUMMY_IDS = new Set(["eyang_rimba", "kapitan_botanis", "pakar_rimba"]);
+const DUMMY_NAMES = new Set(["Eyang Rimba Agung", "Kapitan Botanis", "Rani Sumatra"]);
+
+function sanitizeEntries(entries: LeaderboardEntry[]): LeaderboardEntry[] {
+  if (!Array.isArray(entries)) return [];
+  return entries.filter(
+    (e) => e && e.id && !DUMMY_IDS.has(e.id) && !DUMMY_NAMES.has(e.name)
+  );
+}
 
 // In-memory fallback store
 let globalMemoryStore: LeaderboardEntry[] = [];
@@ -46,26 +54,25 @@ function readLeaderboardStore(): LeaderboardEntry[] {
     if (fs.existsSync(FILE_PATH)) {
       const fileData = fs.readFileSync(FILE_PATH, "utf-8");
       const parsed = JSON.parse(fileData);
-      if (Array.isArray(parsed) && parsed.length > 0) {
-        globalMemoryStore = parsed;
-        return parsed;
+      if (Array.isArray(parsed)) {
+        const cleaned = sanitizeEntries(parsed);
+        globalMemoryStore = cleaned;
+        return cleaned;
       }
     }
   } catch (e) {
     console.warn("⚠️ Failed to read global_leaderboard.json, using in-memory store:", e);
   }
-  if (globalMemoryStore.length === 0) {
-    globalMemoryStore = [...SEED_LEADERBOARD];
-    saveLeaderboardStore(globalMemoryStore);
-  }
+  globalMemoryStore = sanitizeEntries(globalMemoryStore);
   return globalMemoryStore;
 }
 
 function saveLeaderboardStore(entries: LeaderboardEntry[]) {
-  globalMemoryStore = entries;
+  const cleaned = sanitizeEntries(entries);
+  globalMemoryStore = cleaned;
   try {
     ensureDataDirExists();
-    fs.writeFileSync(FILE_PATH, JSON.stringify(entries, null, 2), "utf-8");
+    fs.writeFileSync(FILE_PATH, JSON.stringify(cleaned, null, 2), "utf-8");
   } catch (e) {
     console.warn("⚠️ Failed to save global_leaderboard.json to filesystem:", e);
   }
