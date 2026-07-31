@@ -55,7 +55,7 @@ export const LOCAL_RIDDLES: LocalRiddle[] = [
     plantName: "Bunga Bangkai",
     riddle: "Ukuranku sangat tinggi menjulang bagaikan menara di lantai hutan Sumatra. Aku bukan bunga biasa, melainkan perbungaan terbesar di dunia yang mekar dengan selubung merah hati berkerut. Saat mekar, aku menyebarkan bau bangkai yang menyengat demi mengundang kumbang dan lalat penyerbuk.",
     clues: [
-      "Aku adalah Titan Arum, salah satu flora raksasa yang sangat dilindungi.",
+      "Aku adalah salah satu flora raksasa langka yang sangat dilindungi di hutan Sumatra.",
       "Bentukku mirip menara kuning (spadix) yang dikelilingi kelopak berkerut ungu kemerahan.",
       "Aku mengeluarkan bau busuk seperti daging mati untuk menarik perhatian serangga."
     ],
@@ -118,7 +118,7 @@ export const LOCAL_RIDDLES: LocalRiddle[] = [
     ],
     category: "Tanaman Hias",
     difficulty: "mudah",
-    funFact: "Minyak ekstrak kenanga dikenal secara global dengan nama Ylang-Ylang oil.",
+    funFact: "Minyak ekstrak dari bunga ini dikenal secara global dengan nama Ylang-Ylang oil.",
     botanicalFacts: [
       "Nama ilmiahnya Cananga odorata.",
       "Aroma bunganya sangat kuat pada sore dan malam hari.",
@@ -137,7 +137,7 @@ export const LOCAL_RIDDLES: LocalRiddle[] = [
     ],
     category: "Tanaman Air",
     difficulty: "sedang",
-    funFact: "Bunga teratai mekar di pagi hari dan menguncup rapat kembali saat sore menjelang malam.",
+    funFact: "Bunga ini mekar di pagi hari dan menguncup rapat kembali saat sore menjelang malam.",
     botanicalFacts: [
       "Memiliki nama ilmiah Nymphaea.",
       "Rongga udara di dalam tangkainya membantu sirkulasi oksigen ke akar di dasar lumpur.",
@@ -156,7 +156,7 @@ export const LOCAL_RIDDLES: LocalRiddle[] = [
     ],
     category: "Pohon Hutan",
     difficulty: "sedang",
-    funFact: "Indonesia merupakan negara penghasil rotan terbesar di dunia (sekitar 80% pasokan global).",
+    funFact: "Indonesia merupakan negara penghasil tanaman ini terbesar di dunia (sekitar 80% pasokan global).",
     botanicalFacts: [
       "Termasuk dalam famili Arecaceae (suku pinang-pinangan).",
       "Memiliki duri cambuk (flagellum) untuk mengait dahan pohon lain saat memanjat.",
@@ -186,7 +186,7 @@ export const LOCAL_RIDDLES: LocalRiddle[] = [
   },
   {
     plantName: "Bambu",
-    riddle: "Batangku berongga ruas demi ruas, tumbuh menjulang cepat bagai anak panah menuju langit. Rebung mudaku lezat dimasak, sedangkan batang tuaku yang kokoh menjadi bahan bangunan dan kerajinan bambu khas Nusantara.",
+    riddle: "Batangku berongga ruas demi ruas, tumbuh menjulang cepat bagai anak panah menuju langit. Rebung mudaku lezat dimasak, sedangkan batang tuaku yang kokoh menjadi bahan bangunan dan kerajinan khas Nusantara.",
     clues: [
       "Aku tumbuh membentuk rumpun kokoh dengan batang berongga beruas-ruas.",
       "Tunas mudaku (rebung) biasa diolah menjadi hidangan lezat khas daerah.",
@@ -194,7 +194,7 @@ export const LOCAL_RIDDLES: LocalRiddle[] = [
     ],
     category: "Pohon Hutan",
     difficulty: "mudah",
-    funFact: "Beberapa jenis bambu dapat tumbuh hingga 90 cm hanya dalam waktu 24 jam!",
+    funFact: "Beberapa jenis dari tanaman ini dapat tumbuh hingga 90 cm hanya dalam waktu 24 jam!",
     botanicalFacts: [
       "Termasuk dalam famili Poaceae (rumput-rumputan raksasa).",
       "Akar serabutnya yang rapat sangat efektif mencegah erosi dan tanah longsor.",
@@ -213,7 +213,7 @@ export const LOCAL_RIDDLES: LocalRiddle[] = [
     ],
     category: "Tanaman Pesisir",
     difficulty: "sedang",
-    funFact: "Hutan mangrove Indonesia menyimpan salah satu cadangan karbon terbesar di planet bumi.",
+    funFact: "Hutan pesisir dari tanaman ini menyimpan salah satu cadangan karbon terbesar di planet bumi.",
     botanicalFacts: [
       "Nama ilmiah populernya Rhizophora.",
       "Memiliki mekanisme khusus untuk menyaring garam dari air laut melalui akarnya.",
