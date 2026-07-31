@@ -25,50 +25,7 @@ export const dynamic = "force-dynamic";
 const DATA_DIR = process.env.NODE_ENV === "production" ? "/tmp" : path.join(process.cwd(), ".data");
 const FILE_PATH = path.join(DATA_DIR, "global_leaderboard.json");
 
-const SEED_LEADERBOARD: LeaderboardEntry[] = [
-  {
-    id: "eyang_rimba",
-    name: "Eyang Rimba Agung",
-    title: "Eyang Rimba Agung",
-    score: 2850,
-    totalCorrect: 15,
-    totalAttempted: 15,
-    durationSeconds: 142,
-    floraCount: 15,
-    maxStreak: 15,
-    avatarType: "custom",
-    customAvatar: "🦉",
-    updatedAt: "Terverifikasi",
-  },
-  {
-    id: "kapitan_botanis",
-    name: "Kapitan Botanis",
-    title: "Pelindung Nusantara",
-    score: 2420,
-    totalCorrect: 14,
-    totalAttempted: 15,
-    durationSeconds: 185,
-    floraCount: 14,
-    maxStreak: 12,
-    avatarType: "custom",
-    customAvatar: "🐯",
-    updatedAt: "Terverifikasi",
-  },
-  {
-    id: "pakar_rimba",
-    name: "Rani Sumatra",
-    title: "Pakar Botani Rimba",
-    score: 1980,
-    totalCorrect: 12,
-    totalAttempted: 14,
-    durationSeconds: 220,
-    floraCount: 12,
-    maxStreak: 9,
-    avatarType: "custom",
-    customAvatar: "🦊",
-    updatedAt: "Terverifikasi",
-  },
-];
+const SEED_LEADERBOARD: LeaderboardEntry[] = [];
 
 // In-memory fallback store
 let globalMemoryStore: LeaderboardEntry[] = [];
