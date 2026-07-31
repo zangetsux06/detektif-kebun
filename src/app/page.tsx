@@ -24,15 +24,12 @@ import {
   Check,
   LogIn,
   Camera,
-  Upload
 } from "lucide-react";
 import {
   PixelFlame,
   PixelLogOut,
   PixelLeaf,
   PixelCrown,
-  PixelTrophy,
-  PixelStopwatch,
 } from "@/components/PixelIcon";
 import { PixelAvatar, PIXEL_AVATAR_LIST } from "@/components/PixelAvatar";
 import { getClientFallbackRiddle } from "@/lib/riddles";
@@ -45,7 +42,6 @@ import ImageCropModal from "@/components/ImageCropModal";
 import LeaderboardModal, {
   LeaderboardEntry,
   DEFAULT_INITIAL_LEADERBOARD,
-  formatDuration,
 } from "@/components/LeaderboardModal";
 import EyangClueImg from "@/assets/Eyang_Time_Stop.png";
 import EyangNyawaImg from "@/assets/Eyang_Nyawa.png";
@@ -818,8 +814,26 @@ export default function HomePage() {
   }, []);
 
   useEffect(() => {
-    fetchGlobalLeaderboard();
-  }, [fetchGlobalLeaderboard]);
+    let ignore = false;
+    async function loadData() {
+      try {
+        const res = await fetch("/api/leaderboard");
+        if (res.ok && !ignore) {
+          const data = await res.json();
+          if (Array.isArray(data.entries) && !ignore) {
+            setLeaderboardEntries(data.entries);
+            localStorage.setItem("detektif_kebun_leaderboard", JSON.stringify(data.entries));
+          }
+        }
+      } catch (e) {
+        console.warn("Gagal mengambil leaderboard global:", e);
+      }
+    }
+    loadData();
+    return () => {
+      ignore = true;
+    };
+  }, []);
 
   // ─── Save / Update Leaderboard Record Callback ──────────────────────────────
   const saveLeaderboardRecord = useCallback(
