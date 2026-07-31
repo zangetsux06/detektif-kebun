@@ -452,3 +452,169 @@ export function PixelLeaf({ size = 20, color = "#4a5d23", className = "", ...pro
     </svg>
   );
 }
+
+// ─── 8-Bit Pixel Crown Icon (Rank #1 Maha Detektif) ─────────────────────────
+export function PixelCrown({ size = 20, className = "", ...props }: PixelIconProps) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 16 16"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      shapeRendering="crispEdges"
+      className={className}
+      {...props}
+    >
+      {/* Jewels on peaks */}
+      <path d="M2 3h2v2H2V3zm5 1h2v2H7V4zm5-1h2v2h-2V3z" fill="#ef4444" />
+      <path d="M3 4h1v1H3V4zm5 1h1v1H8V5zm5-1h1v1h-1V4z" fill="#fef08a" />
+      {/* Crown Peaks */}
+      <path d="M1 5h4v2H1V5zm5 2h4v2H6V7zm5-2h4v2h-4V5z" fill="#eab308" />
+      {/* Velvet Interior Base */}
+      <path d="M2 7h12v4H2V7z" fill="#dc2626" />
+      {/* Gold Body */}
+      <path d="M1 9h14v5H1V9z" fill="#f59e0b" />
+      <path d="M2 10h12v3H2v-3z" fill="#fbbf24" />
+      {/* Embedded Gems on Band */}
+      <path d="M3 11h2v1H3v-1zm4 0h2v1H7v-1zm4 0h2v1h-2v-1z" fill="#3b82f6" />
+      <path d="M5 11h2v1H5v-1zm4 0h2v1H9v-1z" fill="#22c55e" />
+      {/* Crown Rim Bottom */}
+      <path d="M1 14h14v1H1v-1z" fill="#78350f" />
+    </svg>
+  );
+}
+
+// ─── 8-Bit Pixel Gold Medal Icon ─────────────────────────────────────────────
+export function PixelMedalGold({ size = 20, className = "", ...props }: PixelIconProps) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 16 16"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      shapeRendering="crispEdges"
+      className={className}
+      {...props}
+    >
+      {/* Ribbon */}
+      <path d="M5 1h2v6H5V1zm4 0h2v6H9V1z" fill="#dc2626" />
+      <path d="M7 1h2v6H7V1z" fill="#ffffff" />
+      {/* Outer Coin Border */}
+      <path d="M4 6h8v2H4V6zm-2 2h12v6H2V8zm2 6h8v1H4v-1z" fill="#b45309" />
+      {/* Gold Coin Body */}
+      <path d="M4 7h8v1H4V7zm-1 1h10v5H3V8zm1 5h8v1H4v-1z" fill="#fbbf24" />
+      {/* Highlight */}
+      <path d="M4 8h2v3H4V8z" fill="#fef08a" />
+      {/* Number 1 in pixel */}
+      <path d="M8 9h2v4H8V9zm-1 0h1v1H7V9z" fill="#78350f" />
+    </svg>
+  );
+}
+
+// ─── 8-Bit Pixel Silver Medal Icon ───────────────────────────────────────────
+export function PixelMedalSilver({ size = 20, className = "", ...props }: PixelIconProps) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 16 16"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      shapeRendering="crispEdges"
+      className={className}
+      {...props}
+    >
+      {/* Ribbon */}
+      <path d="M5 1h2v6H5V1zm4 0h2v6H9V1z" fill="#2563eb" />
+      <path d="M7 1h2v6H7V1z" fill="#ffffff" />
+      {/* Outer Coin Border */}
+      <path d="M4 6h8v2H4V6zm-2 2h12v6H2V8zm2 6h8v1H4v-1z" fill="#475569" />
+      {/* Silver Coin Body */}
+      <path d="M4 7h8v1H4V7zm-1 1h10v5H3V8zm1 5h8v1H4v-1z" fill="#cbd5e1" />
+      {/* Highlight */}
+      <path d="M4 8h2v3H4V8z" fill="#f8fafc" />
+      {/* Number 2 in pixel */}
+      <path d="M7 9h3v1H7V9zm2 1h1v1H9v-1zm-2 1h3v1H7v-1zm-1 1h1v1H6v-1zm0 1h4v1H6v-1z" fill="#1e293b" />
+    </svg>
+  );
+}
+
+// ─── 8-Bit Pixel Bronze Medal Icon ───────────────────────────────────────────
+export function PixelMedalBronze({ size = 20, className = "", ...props }: PixelIconProps) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 16 16"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      shapeRendering="crispEdges"
+      className={className}
+      {...props}
+    >
+      {/* Ribbon */}
+      <path d="M5 1h2v6H5V1zm4 0h2v6H9V1z" fill="#16a34a" />
+      <path d="M7 1h2v6H7V1z" fill="#ffffff" />
+      {/* Outer Coin Border */}
+      <path d="M4 6h8v2H4V6zm-2 2h12v6H2V8zm2 6h8v1H4v-1z" fill="#7c2d12" />
+      {/* Bronze Coin Body */}
+      <path d="M4 7h8v1H4V7zm-1 1h10v5H3V8zm1 5h8v1H4v-1z" fill="#d97706" />
+      {/* Highlight */}
+      <path d="M4 8h2v3H4V8z" fill="#fde68a" />
+      {/* Number 3 in pixel */}
+      <path d="M7 9h3v1H7V9zm2 1h1v1H9v-1zm-2 1h2v1H7v-1zm2 1h1v1H9v-1zm-2 1h3v1H7v-1z" fill="#451a03" />
+    </svg>
+  );
+}
+
+// ─── 8-Bit Pixel Stopwatch Icon (Speed Run Metric) ───────────────────────────
+export function PixelStopwatch({ size = 16, className = "", ...props }: PixelIconProps) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 16 16"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      shapeRendering="crispEdges"
+      className={className}
+      {...props}
+    >
+      {/* Top Winder Button */}
+      <path d="M7 1h2v2H7V1z" fill="#94a3b8" />
+      <path d="M6 3h4v1H6V3z" fill="#cbd5e1" />
+      {/* Clock Outer Rim */}
+      <path d="M5 4h6v1H5V4zm-2 2h2v1H3V6zm10 0h2v1h-2V6zM2 7h1v6H2V7zm13 0h1v6h-1V7zm-2 6h2v1h-2v-1zM3 13h2v1H3v-1zm2 1h6v1H5v-1z" fill="#334155" />
+      {/* Dial Face */}
+      <path d="M5 5h6v1H5V5zm-2 2h10v6H3V7zm2 6h6v1H5v-1z" fill="#f8fafc" />
+      {/* Ticking Hand & Center Pin */}
+      <path d="M7 7h2v2H7V7zm1 2h3v1H8V9z" fill="#dc2626" />
+    </svg>
+  );
+}
+
+// ─── 8-Bit Pixel Ribbon / Rank Badge Icon ───────────────────────────────────
+export function PixelRibbon({ size = 16, color = "#92703a", className = "", ...props }: PixelIconProps) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 16 16"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      shapeRendering="crispEdges"
+      className={className}
+      {...props}
+    >
+      {/* Outer Badge Ring */}
+      <path d="M5 1h6v1H5V1zm-2 2h2v1H3V3zm10 0h2v1h-2V3zM2 4h1v5H2V4zm13 0h1v5h-1V4zm-2 5h2v1h-2V9zM3 9h2v1H3V9zm2 1h6v1H5v-1z" fill="#1a1c14" />
+      {/* Badge Body */}
+      <path d="M5 2h6v2H5V2zm-2 2h10v5H3V4zm2 5h6v1H5V9z" fill={color} />
+      {/* Bottom Tails */}
+      <path d="M4 10h3v5L5.5 13.5 4 15v-5zm5 0h3v5l-1.5-1.5L9 15v-5z" fill="#78350f" />
+    </svg>
+  );
+}
+

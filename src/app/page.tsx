@@ -28,6 +28,9 @@ import {
   PixelFlame,
   PixelLogOut,
   PixelLeaf,
+  PixelCrown,
+  PixelTrophy,
+  PixelStopwatch,
 } from "@/components/PixelIcon";
 import { PixelAvatar, PIXEL_AVATAR_LIST } from "@/components/PixelAvatar";
 import { getClientFallbackRiddle } from "@/lib/riddles";
@@ -36,6 +39,11 @@ import RiddleCard from "@/components/RiddleCard";
 import ScoreBoard from "@/components/ScoreBoard";
 import BotanicalCanvas from "@/components/BotanicalCanvas";
 import FloraCollectionModal from "@/components/FloraCollectionModal";
+import LeaderboardModal, {
+  LeaderboardEntry,
+  DEFAULT_INITIAL_LEADERBOARD,
+  formatDuration,
+} from "@/components/LeaderboardModal";
 import EyangClueImg from "@/assets/Eyang_Time_Stop.png";
 import EyangNyawaImg from "@/assets/Eyang_Nyawa.png";
 import EyangTimeStopImg from "@/assets/Eyang_Clue.png";
@@ -208,6 +216,9 @@ export default function HomePage() {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showGoogleConfigModal, setShowGoogleConfigModal] = useState(false);
+  const [showLeaderboardModal, setShowLeaderboardModal] = useState(false);
+  const [leaderboardEntries, setLeaderboardEntries] = useState<LeaderboardEntry[]>(DEFAULT_INITIAL_LEADERBOARD);
+  const [sessionDuration, setSessionDuration] = useState(0);
   const [customClientIdInput, setCustomClientIdInput] = useState("");
   const [showSurrenderConfirm, setShowSurrenderConfirm] = useState(false);
   const [editingName, setEditingName] = useState("");
@@ -708,12 +719,127 @@ export default function HomePage() {
         setPerformanceMode(true);
       }, 0);
     }
+
+    // Load Leaderboard data
+    const savedLb = localStorage.getItem("detektif_kebun_leaderboard");
+    if (savedLb) {
+      try {
+        const parsed = JSON.parse(savedLb);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setTimeout(() => {
+            setLeaderboardEntries(parsed);
+          }, 0);
+        }
+      } catch (e) {
+        console.error("Gagal load leaderboard dari localStorage", e);
+      }
+    }
   }, []);
 
   // Update performance mode setting
   useEffect(() => {
     localStorage.setItem("detektif_kebun_perf_mode", String(performanceMode));
   }, [performanceMode]);
+
+  // Active session duration timer effect
+  useEffect(() => {
+    let timer: NodeJS.Timeout | null = null;
+    if (gamePhase === "playing") {
+      timer = setInterval(() => {
+        setSessionDuration((prev) => prev + 1);
+      }, 1000);
+    }
+    return () => {
+      if (timer) clearInterval(timer);
+    };
+  }, [gamePhase]);
+
+  // ─── Save / Update Leaderboard Record Callback ──────────────────────────────
+  const saveLeaderboardRecord = useCallback(
+    (
+      finalScore?: number,
+      finalCorrect?: number,
+      finalAttempted?: number,
+      finalDuration?: number
+    ) => {
+      if (!userProfile) return;
+
+      const activeScore = finalScore ?? score;
+      const activeCorrect = finalCorrect ?? totalCorrect;
+      const activeAttempted = finalAttempted ?? totalAttempted;
+      const activeDuration = finalDuration ?? sessionDuration;
+      const activeFloraCount = discoveredGallery.length;
+
+      const currentProfile: UserProfile = userProfile || {
+        id: "demo_user",
+        name: "Detektif Nusantara",
+        email: "detektif@nusantara.org",
+        picture: "",
+        avatarType: "custom",
+        customAvatar: "🦉",
+        title: calculateTitle(discoveredGallery.length),
+      };
+
+      const entryId = currentProfile.id || currentProfile.email || "demo_user";
+
+      setLeaderboardEntries((prevEntries) => {
+        const existingIndex = prevEntries.findIndex(
+          (e) => e.id === entryId || (e.email && e.email === currentProfile.email)
+        );
+
+        let updatedList = [...prevEntries];
+
+        if (existingIndex >= 0) {
+          const existing = updatedList[existingIndex];
+          const newScore = Math.max(existing.score, activeScore);
+          const newDuration =
+            existing.durationSeconds > 0 && activeScore <= existing.score
+              ? Math.min(existing.durationSeconds, activeDuration > 0 ? activeDuration : existing.durationSeconds)
+              : activeDuration > 0
+              ? activeDuration
+              : existing.durationSeconds;
+
+          updatedList[existingIndex] = {
+            ...existing,
+            name: currentProfile.name,
+            email: currentProfile.email,
+            picture: currentProfile.picture,
+            avatarType: currentProfile.avatarType,
+            customAvatar: currentProfile.customAvatar,
+            title: currentProfile.title,
+            score: newScore,
+            totalCorrect: Math.max(existing.totalCorrect, activeCorrect),
+            totalAttempted: Math.max(existing.totalAttempted, activeAttempted),
+            durationSeconds: newDuration,
+            floraCount: Math.max(existing.floraCount, activeFloraCount),
+            maxStreak: Math.max(existing.maxStreak, streak),
+            updatedAt: "Baru saja",
+          };
+        } else {
+          updatedList.push({
+            id: entryId,
+            name: currentProfile.name,
+            email: currentProfile.email,
+            picture: currentProfile.picture,
+            avatarType: currentProfile.avatarType,
+            customAvatar: currentProfile.customAvatar,
+            title: currentProfile.title,
+            score: activeScore,
+            totalCorrect: activeCorrect,
+            totalAttempted: activeAttempted,
+            durationSeconds: activeDuration,
+            floraCount: activeFloraCount,
+            maxStreak: streak,
+            updatedAt: "Baru saja",
+          });
+        }
+
+        localStorage.setItem("detektif_kebun_leaderboard", JSON.stringify(updatedList));
+        return updatedList;
+      });
+    },
+    [score, totalCorrect, totalAttempted, sessionDuration, discoveredGallery.length, userProfile, calculateTitle, streak]
+  );
 
   // Update stats in localStorage on change
   useEffect(() => {
@@ -726,7 +852,11 @@ export default function HomePage() {
     if (userProfile?.email) {
       localStorage.setItem(`detektif_kebun_stats_${userProfile.email}`, JSON.stringify(statsData));
     }
-  }, [score, streak, totalCorrect, totalAttempted, userProfile?.email]);
+    // Auto sync to leaderboard ONLY if user is logged in and actively playing/finishing a session
+    if (userProfile && (gamePhase === "playing" || gamePhase === "summary")) {
+      saveLeaderboardRecord(score, totalCorrect, totalAttempted, sessionDuration);
+    }
+  }, [score, streak, totalCorrect, totalAttempted, userProfile, sessionDuration, saveLeaderboardRecord, gamePhase]);
 
   // Cycle through intro messages on click
   const handleIntroNext = () => {
@@ -751,6 +881,7 @@ export default function HomePage() {
     setStreak(0);
     setTotalCorrect(0);
     setTotalAttempted(0);
+    setSessionDuration(0);
     setSessionQuestionIndex(1);
     setSessionPlantsAsked([]);
     setSessionDiscoveredPlants([]);
@@ -1280,6 +1411,28 @@ export default function HomePage() {
         {/* Profil / Login Badge - Top Right (Desktop) */}
         {gamePhase === "intro" && (
           <div className="fixed top-6 right-6 z-50 hidden lg:flex items-center gap-2">
+            {/* Leaderboard Button */}
+            <motion.button
+              onClick={() => setShowLeaderboardModal(true)}
+              className="flex items-center gap-3 px-3 py-2 bg-[#2d1b10] border-2 border-pixel-wood hover:border-pixel-gold rounded-sm shadow-[0_4px_0_#1a0f09] hover:shadow-[0_2px_0_#1a0f09] hover:translate-y-[2px] transition-all group cursor-pointer"
+              style={{ imageRendering: "pixelated" }}
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
+              title="Lihat Papan Peringkat Rimba"
+            >
+              <div className="w-10 h-10 rounded-sm border-2 border-[#1a0f09] bg-[#12130e] flex items-center justify-center overflow-hidden shadow-inner group-hover:border-pixel-gold transition-colors">
+                <PixelCrown size={24} className="text-[#facc15]" />
+              </div>
+              <div className="flex flex-col items-start leading-tight">
+                <span className="text-[11px] font-extrabold text-[#e4d6a7] uppercase tracking-wider group-hover:text-pixel-gold transition-colors" style={{ fontFamily: "var(--font-title)" }}>
+                  Peringkat
+                </span>
+                <span className="text-[9px] font-bold text-[#8b9973] mt-0.5" style={{ fontFamily: "var(--font-title)" }}>
+                  👑 Hall of Fame
+                </span>
+              </div>
+            </motion.button>
+
             {userProfile ? (
               <motion.button
                 onClick={() => {
@@ -1287,7 +1440,7 @@ export default function HomePage() {
                   setSelectedAvatar(userProfile.avatarType === "google" ? "google_pic" : userProfile.customAvatar);
                   setShowProfileModal(true);
                 }}
-                className="flex items-center gap-3 px-3 py-2 bg-[#2d1b10] border-2 border-pixel-wood hover:border-pixel-gold rounded-sm shadow-[0_4px_0_#1a0f09] hover:shadow-[0_2px_0_#1a0f09] hover:translate-y-[2px] transition-all group"
+                className="flex items-center gap-3 px-3 py-2 bg-[#2d1b10] border-2 border-pixel-wood hover:border-pixel-gold rounded-sm shadow-[0_4px_0_#1a0f09] hover:shadow-[0_2px_0_#1a0f09] hover:translate-y-[2px] transition-all group cursor-pointer"
                 style={{ imageRendering: "pixelated" }}
               >
                 <div className="w-10 h-10 rounded-sm border-2 border-[#1a0f09] bg-[#12130e] flex items-center justify-center overflow-hidden shadow-inner group-hover:border-pixel-gold transition-colors">
@@ -1453,7 +1606,29 @@ export default function HomePage() {
         <main className="flex-1 w-full max-w-4xl mx-auto px-4 pb-12 flex flex-col gap-6">
           {/* Profil / Login Badge (Mobile) */}
           {gamePhase === "intro" && (
-            <div className="lg:hidden w-full flex justify-end px-1 mt-1 z-30">
+            <div className="lg:hidden w-full flex items-center justify-end gap-2 px-1 mt-1 z-30">
+              {/* Mobile Leaderboard Button */}
+              <motion.button
+                onClick={() => setShowLeaderboardModal(true)}
+                className="flex items-center gap-2.5 px-3 py-1.5 bg-[#1c150c] border-2 border-[#5e3c25] hover:border-[#c9a227] rounded-sm shadow-[0_3px_0_#0f0a05] cursor-pointer transition-all group shrink-0"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                style={{ imageRendering: "pixelated" }}
+                title="Papan Peringkat Rimba"
+              >
+                <div className="w-8 h-8 rounded-sm border-2 border-[#c9a227] bg-[#12130e] flex items-center justify-center overflow-hidden shrink-0">
+                  <PixelCrown size={20} className="text-[#facc15]" />
+                </div>
+                <div className="flex flex-col items-start leading-tight min-w-0">
+                  <span className="text-[10px] sm:text-xs font-extrabold text-[#f4eedd] group-hover:text-pixel-gold tracking-wide truncate block" style={{ fontFamily: "var(--font-title)" }}>
+                    Peringkat
+                  </span>
+                  <span className="text-[8px] sm:text-[9px] font-bold text-[#a4b486] mt-0.5 truncate block" style={{ fontFamily: "var(--font-title)" }}>
+                    👑 Hall of Fame
+                  </span>
+                </div>
+              </motion.button>
+
               {userProfile ? (
                 <motion.button
                   onClick={() => {
@@ -2107,6 +2282,16 @@ export default function HomePage() {
                     <span>Main Lagi!</span>
                   </motion.button>
                   <motion.button
+                    onClick={() => setShowLeaderboardModal(true)}
+                    className="py-3 px-4 border-4 border-pixel-wood bg-[#2f1503] hover:bg-[#5e3c25] text-[#facc15] font-bold text-[9px] uppercase tracking-wider text-center flex items-center justify-center gap-2 cursor-pointer transition-all shadow-md"
+                    whileHover={{ scale: 1.03 }}
+                    whileTap={{ scale: 0.97 }}
+                    style={{ fontFamily: "var(--font-title)" }}
+                  >
+                    <PixelCrown size={18} className="text-[#facc15]" />
+                    <span>Peringkat</span>
+                  </motion.button>
+                  <motion.button
                     onClick={() => {
                       setGamePhase("intro");
                       setEyangMessage(INTRO_MESSAGES[0]);
@@ -2643,6 +2828,30 @@ export default function HomePage() {
           </div>
         )}
       </AnimatePresence>
+
+      {/* ── Leaderboard Modal ────────────────────────────────────────── */}
+      <LeaderboardModal
+        open={showLeaderboardModal}
+        onClose={() => setShowLeaderboardModal(false)}
+        entries={leaderboardEntries}
+        currentUserId={userProfile?.id}
+        currentUserEmail={userProfile?.email}
+        isLoggedIn={!!userProfile}
+        onLoginTrigger={handleGoogleLogin}
+        onRefresh={() => {
+          const savedLb = localStorage.getItem("detektif_kebun_leaderboard");
+          if (savedLb) {
+            try {
+              const parsed = JSON.parse(savedLb);
+              if (Array.isArray(parsed) && parsed.length > 0) {
+                setLeaderboardEntries(parsed);
+              }
+            } catch (e) {
+              console.error("Gagal load leaderboard", e);
+            }
+          }
+        }}
+      />
     </div>
   );
 }
