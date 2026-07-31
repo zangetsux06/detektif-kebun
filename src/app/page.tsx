@@ -820,9 +820,27 @@ export default function HomePage() {
         const res = await fetch("/api/leaderboard");
         if (res.ok && !ignore) {
           const data = await res.json();
-          if (Array.isArray(data.entries) && !ignore) {
+          if (Array.isArray(data.entries) && data.entries.length > 0 && !ignore) {
             setLeaderboardEntries(data.entries);
             localStorage.setItem("detektif_kebun_leaderboard", JSON.stringify(data.entries));
+          } else {
+            // Check local storage to restore existing local entries and sync to server
+            const savedLb = localStorage.getItem("detektif_kebun_leaderboard");
+            if (savedLb) {
+              try {
+                const parsed = JSON.parse(savedLb);
+                if (Array.isArray(parsed) && parsed.length > 0 && !ignore) {
+                  setLeaderboardEntries(parsed);
+                  fetch("/api/leaderboard", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ entries: parsed }),
+                  }).catch(() => {});
+                }
+              } catch (e) {
+                console.warn(e);
+              }
+            }
           }
         }
       } catch (e) {
