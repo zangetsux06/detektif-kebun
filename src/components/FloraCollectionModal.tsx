@@ -3,7 +3,8 @@
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { PixelTrash, PixelLock } from "./PixelIcon";
-import { PLANT_ICON_MAP, getNormalizedPlantKey } from "./BotanicalCanvas";
+import { PLANT_ICON_MAP } from "./BotanicalCanvas";
+import { getNormalizedPlantKey } from "@/lib/plantUtils";
 
 
 const ALL_FLORA = [

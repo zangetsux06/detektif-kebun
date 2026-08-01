@@ -618,3 +618,57 @@ export function PixelRibbon({ size = 16, color = "#92703a", className = "", ...p
   );
 }
 
+// ─── 8-Bit Pixel Parchment Scroll Icon (Mode 1: Teka-Teki Utama) ───────────
+export function PixelScroll({ size = 24, className = "", ...props }: PixelIconProps) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 16 16"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      shapeRendering="crispEdges"
+      className={className}
+      {...props}
+    >
+      {/* Scroll Rod Ends (Wood/Gold) */}
+      <path d="M2 1h2v14H2V1zm10 0h2v14h-2V1z" fill="#92623a" />
+      <path d="M2 0h2v1H2V0zm0 15h2v1H2v-1zm10-15h2v1h-2V0zm0 15h2v1h-2v-1z" fill="#facc15" />
+      {/* Parchment Body (Warm Antique Beige) */}
+      <path d="M4 2h8v12H4V2z" fill="#f4eedd" />
+      {/* Scroll Lines (Ink Text Effect) */}
+      <path d="M5 4h6v1H5V4zm0 2h5v1H5V6zm0 2h6v1H5V8zm0 2h4v1H5v-1z" fill="#5e3c25" />
+      {/* Red Wax Seal */}
+      <path d="M9 11h2v2H9v-2z" fill="#dc2626" />
+    </svg>
+  );
+}
+
+// ─── 8-Bit Pixel Crossword Grid Icon (Mode 2: Teka Silang Rimba) ───────────
+export function PixelCrossword({ size = 24, className = "", ...props }: PixelIconProps) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 16 16"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      shapeRendering="crispEdges"
+      className={className}
+      {...props}
+    >
+      {/* Wooden Frame */}
+      <path d="M0 0h16v16H0V0z" fill="#2f1503" />
+      <path d="M1 1h14v14H1V1z" fill="#5e3c25" />
+      {/* Grid Lines */}
+      <path d="M5 1h1v14H5V1zm5 0h1v14h-1V1zM1 5h14v1H1V5zm0 5h14v1H1v-1z" fill="#120e01" />
+      {/* Filled Stone Tiles */}
+      <path d="M1 1h4v4H1V1zm10 1h4v4h-4V2zm-5 5h4v4H6V7zm-5 5h4v4H1v-4zm10 0h4v4h-4v-4z" fill="#3a351e" />
+      {/* Active Intersecting Gold Tile & Letter Markers */}
+      <path d="M6 2h4v4H6V2zm-5 5h4v4H1V7zm10 0h4v4h-4V7zm-5 5h4v4H6v-4z" fill="#4a5d23" />
+      <path d="M7 3h2v2H7V3zm-4 5h2v2H3V8zm10 0h2v2h-2V8zm-4 5h2v2H7v-2z" fill="#facc15" />
+    </svg>
+  );
+}
+
+

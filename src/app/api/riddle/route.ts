@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { generateWithCascade, formatGeminiErrorSummary } from "@/lib/gemini";
 import { LOCAL_RIDDLES, getPlantFirstLetter } from "@/lib/riddles";
-import { getNormalizedPlantKey } from "@/components/BotanicalCanvas";
+import { getNormalizedPlantKey } from "@/lib/plantUtils";
 export { LOCAL_RIDDLES };
 
 export const dynamic = "force-dynamic";

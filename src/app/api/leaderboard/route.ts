@@ -16,6 +16,8 @@ export interface LeaderboardEntry {
   durationSeconds: number;
   floraCount: number;
   maxStreak: number;
+  ttsScore?: number;
+  ttsCompleted?: number;
   updatedAt: string;
 }
 
@@ -98,6 +100,7 @@ function mergeLeaderboardEntries(current: LeaderboardEntry[], incoming: Leaderbo
 
   for (const item of incoming) {
     if (!item || (!item.id && !item.email)) continue;
+
     const itemKey = item.id || item.email || "";
 
     const idx = result.findIndex(
@@ -113,6 +116,8 @@ function mergeLeaderboardEntries(current: LeaderboardEntry[], incoming: Leaderbo
       const bestAttempted = Math.max(existing.totalAttempted || 0, item.totalAttempted || 0);
       const bestFlora = Math.max(existing.floraCount || 0, item.floraCount || 0);
       const bestStreak = Math.max(existing.maxStreak || 0, item.maxStreak || 0);
+      const bestTtsScore = Math.max(existing.ttsScore || 0, item.ttsScore || 0);
+      const bestTtsCompleted = Math.max(existing.ttsCompleted || 0, item.ttsCompleted || 0);
 
       // Best duration (fastest time for best score)
       let bestDuration = existing.durationSeconds;
@@ -138,7 +143,9 @@ function mergeLeaderboardEntries(current: LeaderboardEntry[], incoming: Leaderbo
         durationSeconds: bestDuration,
         floraCount: bestFlora,
         maxStreak: bestStreak,
-        updatedAt: item.score > existing.score ? "Baru saja" : existing.updatedAt,
+        ttsScore: bestTtsScore,
+        ttsCompleted: bestTtsCompleted,
+        updatedAt: item.score > existing.score || (item.ttsScore || 0) > (existing.ttsScore || 0) ? "Baru saja" : existing.updatedAt,
       };
     } else {
       result.push(item);

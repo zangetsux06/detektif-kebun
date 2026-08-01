@@ -30,6 +30,8 @@ import {
   PixelLogOut,
   PixelLeaf,
   PixelCrown,
+  PixelScroll,
+  PixelCrossword,
 } from "@/components/PixelIcon";
 import { PixelAvatar, PIXEL_AVATAR_LIST } from "@/components/PixelAvatar";
 import { getClientFallbackRiddle } from "@/lib/riddles";
@@ -39,6 +41,7 @@ import ScoreBoard from "@/components/ScoreBoard";
 import BotanicalCanvas from "@/components/BotanicalCanvas";
 import FloraCollectionModal from "@/components/FloraCollectionModal";
 import ImageCropModal from "@/components/ImageCropModal";
+import TTSFloraModal from "@/components/TTSFloraModal";
 import LeaderboardModal, {
   LeaderboardEntry,
   DEFAULT_INITIAL_LEADERBOARD,
@@ -180,6 +183,7 @@ export default function HomePage() {
   const [eyangMessage, setEyangMessage]   = useState(INTRO_MESSAGES[0]);
   const [eyangMood, setEyangMood]         = useState<EyangMood>("excited");
   const [introStep, setIntroStep]         = useState(0);
+  const [selectedModeStep, setSelectedModeStep] = useState<"mode_select" | "difficulty_select">("mode_select");
   const [score, setScore]                 = useState(0);
   const [streak, setStreak]               = useState(0);
   const [totalCorrect, setTotalCorrect]   = useState(0);
@@ -217,7 +221,12 @@ export default function HomePage() {
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showGoogleConfigModal, setShowGoogleConfigModal] = useState(false);
   const [showLeaderboardModal, setShowLeaderboardModal] = useState(false);
+  const [showTTSModal, setShowTTSModal] = useState(false);
   const [leaderboardEntries, setLeaderboardEntries] = useState<LeaderboardEntry[]>(DEFAULT_INITIAL_LEADERBOARD);
+
+  const handleTTSScoreEarned = useCallback((earnedScore: number) => {
+    setScore((p) => p + earnedScore);
+  }, []);
   const [sessionDuration, setSessionDuration] = useState(0);
   const [customClientIdInput, setCustomClientIdInput] = useState("");
   const [showSurrenderConfirm, setShowSurrenderConfirm] = useState(false);
@@ -1855,8 +1864,89 @@ export default function HomePage() {
                     >
                       Lanjut →
                     </motion.button>
+                  ) : selectedModeStep === "mode_select" ? (
+                    <div className="flex flex-col items-center gap-6 w-full max-w-2xl">
+                      {/* Title */}
+                      <div className="flex flex-col items-center gap-2">
+                        <p
+                          className="text-lg font-bold uppercase tracking-[0.3em] text-pixel-gold"
+                          style={{
+                            fontFamily: "var(--font-title)",
+                            textShadow: "0 0 12px rgba(236,194,70,0.7), 2px 2px 0 #3a2010, -1px -1px 0 #3a2010",
+                          }}
+                        >
+                          🌿 PILIH MODE PERMAINAN ⚔️
+                        </p>
+                        <div
+                          className="w-48 h-0.5"
+                          style={{ background: "linear-gradient(to right, transparent, #ecc246, transparent)" }}
+                        />
+                      </div>
+
+                      {/* Mode Choice Cards */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 w-full">
+                        {/* MODE 1: RIDDLE BOTANI NUSANTARA */}
+                        <button
+                          onClick={() => setSelectedModeStep("difficulty_select")}
+                          className="group relative flex flex-col items-center gap-3 px-6 py-6 border-4 border-pixel-wood cursor-pointer active:translate-y-1.5 transition-all text-center"
+                          style={{
+                            fontFamily: "var(--font-title)",
+                            backgroundColor: "#2f1503",
+                            boxShadow: "0 6px 0 0 #1a1c14",
+                            imageRendering: "pixelated",
+                          }}
+                        >
+                          <PixelScroll size={44} className="group-hover:scale-110 transition-transform drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]" />
+                          <div className="flex flex-col items-center gap-1">
+                            <span className="text-xs sm:text-sm font-bold uppercase tracking-wider text-[#fde68a]">
+                              MODE 1: RIDDLE BOTANI
+                            </span>
+                            <p className="text-xs text-[#f4eedd]/80 font-normal leading-relaxed">
+                              Petualangan tebak flora Nusantara dari bait puitis Eyang Rimba &amp; melukis 15 sketsa spesimen.
+                            </p>
+                          </div>
+                          <div className="mt-2 text-[10px] uppercase font-bold text-[#facc15] bg-[#5e3c25] px-3 py-1 border border-[#facc15]">
+                            Mulai Riddles Rimba →
+                          </div>
+                        </button>
+
+                        {/* MODE 2: KISI-KISI SILANG BOTANI */}
+                        <button
+                          onClick={() => setShowTTSModal(true)}
+                          className="group relative flex flex-col items-center gap-3 px-6 py-6 border-4 border-pixel-wood cursor-pointer active:translate-y-1.5 transition-all text-center"
+                          style={{
+                            fontFamily: "var(--font-title)",
+                            backgroundColor: "#171302",
+                            boxShadow: "0 6px 0 0 #1a1c14",
+                            imageRendering: "pixelated",
+                          }}
+                        >
+                          <PixelCrossword size={44} className="group-hover:scale-110 transition-transform drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]" />
+                          <div className="flex flex-col items-center gap-1">
+                            <span className="text-xs sm:text-sm font-bold uppercase tracking-wider text-[#ecc246]">
+                              MODE 2: KISI SILANG RIMBA
+                            </span>
+                            <p className="text-xs text-[#f4eedd]/80 font-normal leading-relaxed">
+                              Tantangan Teka-Teki Silang bersilang ubin batu &amp; kayu antik dengan petunjuk rahasia Eyang Rimba.
+                            </p>
+                          </div>
+                          <div className="mt-2 text-[10px] uppercase font-bold text-[#fef08a] bg-[#4a5d23] px-3 py-1 border border-[#ecc246]">
+                            Buka Kisi Silang 🌿
+                          </div>
+                        </button>
+                      </div>
+                    </div>
                   ) : (
                     <div className="flex flex-col items-center gap-6 w-full max-w-2xl">
+                      {/* Back button */}
+                      <button
+                        onClick={() => setSelectedModeStep("mode_select")}
+                        className="self-start text-xs font-bold text-[#fde68a] hover:text-[#facc15] flex items-center gap-1 cursor-pointer underline mb-[-8px]"
+                        style={{ fontFamily: "var(--font-title)" }}
+                      >
+                        ← Kembali ke Pilih Mode
+                      </button>
+
                       {/* Title — lebih jelas & terang */}
                       <div className="flex flex-col items-center gap-2">
                         <p
@@ -2933,6 +3023,13 @@ export default function HomePage() {
         isLoggedIn={!!userProfile}
         onLoginTrigger={handleGoogleLogin}
         onRefresh={fetchGlobalLeaderboard}
+      />
+
+      {/* ── TTS Flora Modal ───────────────────────────────────────────── */}
+      <TTSFloraModal
+        open={showTTSModal}
+        onClose={() => setShowTTSModal(false)}
+        onScoreEarned={handleTTSScoreEarned}
       />
 
       {/* ── Custom Image Crop Modal ────────────────────────────────────── */}

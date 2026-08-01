@@ -30,6 +30,8 @@ export interface LeaderboardEntry {
   durationSeconds: number; // e.g. 135 -> "02:15"
   floraCount: number;
   maxStreak: number;
+  ttsScore?: number;
+  ttsCompleted?: number;
   updatedAt: string;
 }
 
@@ -64,7 +66,7 @@ export default function LeaderboardModal({
   onLoginTrigger,
   onRefresh,
 }: LeaderboardModalProps) {
-  const [activeTab, setActiveTab] = useState<"score" | "speed" | "journal">("score");
+  const [activeTab, setActiveTab] = useState<"score" | "speed" | "journal" | "tts">("score");
   const [countdown, setCountdown] = useState(300); // 5 minutes = 300s
   const [isRefreshing, setIsRefreshing] = useState(false);
 
@@ -115,6 +117,13 @@ export default function LeaderboardModal({
         const timeA = a.durationSeconds > 0 ? a.durationSeconds : 999999;
         const timeB = b.durationSeconds > 0 ? b.durationSeconds : 999999;
         if (timeA !== timeB) return timeA - timeB;
+        return b.score - a.score;
+      });
+    } else if (activeTab === "tts") {
+      return list.sort((a, b) => {
+        const ttsA = a.ttsScore || 0;
+        const ttsB = b.ttsScore || 0;
+        if (ttsB !== ttsA) return ttsB - ttsA;
         return b.score - a.score;
       });
     } else {
@@ -242,47 +251,57 @@ export default function LeaderboardModal({
                 /* ── AUTHENTICATED LEADERBOARD VIEW ── */
                 <>
                   {/* Filter Tabs */}
-                  <div className="grid grid-cols-3 gap-3 mb-5">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mb-5">
                     <button
                       onClick={() => setActiveTab("score")}
-                      className={`flex items-center justify-center gap-2.5 py-3 px-4 text-xs font-bold transition-all cursor-pointer border-2 ${
+                      className={`flex items-center justify-center gap-2 py-2.5 px-3 text-[10px] sm:text-xs font-bold transition-all cursor-pointer border-2 ${
                         activeTab === "score"
                           ? "bg-[#92703a] text-[#fef08a] border-[#facc15] shadow-inner"
                           : "bg-[#2f1503] text-[#d97706] border-[#5e3c25] hover:bg-[#3a200b]"
                       }`}
                       style={{ fontFamily: "'Press Start 2P', monospace" }}
                     >
-                      <PixelTrophy size={18} />
-                      <span className="hidden sm:inline">SKOR TERTINGGI</span>
-                      <span className="sm:hidden">SKOR</span>
+                      <PixelTrophy size={16} />
+                      <span>SKOR UTAMA</span>
                     </button>
 
                     <button
                       onClick={() => setActiveTab("speed")}
-                      className={`flex items-center justify-center gap-2.5 py-3 px-4 text-xs font-bold transition-all cursor-pointer border-2 ${
+                      className={`flex items-center justify-center gap-2 py-2.5 px-3 text-[10px] sm:text-xs font-bold transition-all cursor-pointer border-2 ${
                         activeTab === "speed"
                           ? "bg-[#92703a] text-[#fef08a] border-[#facc15] shadow-inner"
                           : "bg-[#2f1503] text-[#d97706] border-[#5e3c25] hover:bg-[#3a200b]"
                       }`}
                       style={{ fontFamily: "'Press Start 2P', monospace" }}
                     >
-                      <PixelStopwatch size={18} />
-                      <span className="hidden sm:inline">SPEEDRUN</span>
-                      <span className="sm:hidden">CEPAT</span>
+                      <PixelStopwatch size={16} />
+                      <span>SPEEDRUN</span>
                     </button>
 
                     <button
                       onClick={() => setActiveTab("journal")}
-                      className={`flex items-center justify-center gap-2.5 py-3 px-4 text-xs font-bold transition-all cursor-pointer border-2 ${
+                      className={`flex items-center justify-center gap-2 py-2.5 px-3 text-[10px] sm:text-xs font-bold transition-all cursor-pointer border-2 ${
                         activeTab === "journal"
                           ? "bg-[#92703a] text-[#fef08a] border-[#facc15] shadow-inner"
                           : "bg-[#2f1503] text-[#d97706] border-[#5e3c25] hover:bg-[#3a200b]"
                       }`}
                       style={{ fontFamily: "'Press Start 2P', monospace" }}
                     >
-                      <PixelLeaf size={18} />
-                      <span className="hidden sm:inline">JURNAL BOTANI</span>
-                      <span className="sm:hidden">FLORA</span>
+                      <PixelLeaf size={16} />
+                      <span>KOLEKSI</span>
+                    </button>
+
+                    <button
+                      onClick={() => setActiveTab("tts")}
+                      className={`flex items-center justify-center gap-2 py-2.5 px-3 text-[10px] sm:text-xs font-bold transition-all cursor-pointer border-2 ${
+                        activeTab === "tts"
+                          ? "bg-[#92703a] text-[#fef08a] border-[#facc15] shadow-inner"
+                          : "bg-[#2f1503] text-[#d97706] border-[#5e3c25] hover:bg-[#3a200b]"
+                      }`}
+                      style={{ fontFamily: "'Press Start 2P', monospace" }}
+                    >
+                      <span>🧩</span>
+                      <span>TTS FLORA</span>
                     </button>
                   </div>
 

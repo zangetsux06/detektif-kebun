@@ -322,7 +322,7 @@ export function getPlantFirstLetter(plantName: string): string {
   return /[A-Z0-9]/.test(firstChar) ? firstChar : "A";
 }
 
-import { getNormalizedPlantKey } from "@/components/BotanicalCanvas";
+import { getNormalizedPlantKey } from "@/lib/plantUtils";
 
 export function getClientFallbackRiddle(excludedPlants: string[] = []) {
   const excludedLower = excludedPlants.map((p) => p.toLowerCase());
