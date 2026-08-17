@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { kv } from "@vercel/kv";
 import fs from "fs";
 import path from "path";
 
@@ -23,8 +24,18 @@ export interface LeaderboardEntry {
 
 export const dynamic = "force-dynamic";
 
-// Persistent file storage path for serverless/local environments
-const DATA_DIR = process.env.NODE_ENV === "production" ? "/tmp" : path.join(process.cwd(), ".data");
+const KV_KEY = "global_leaderboard";
+
+// Vercel KV (Upstash Redis) is the persistent, shared store used in production.
+// Fallback to a local file only for development when KV env vars are absent.
+const isKVConfigured =
+  typeof process.env.KV_REST_API_URL === "string" &&
+  process.env.KV_REST_API_URL.length > 0 &&
+  typeof process.env.KV_REST_API_TOKEN === "string" &&
+  process.env.KV_REST_API_TOKEN.length > 0;
+
+// File storage path for local development
+const DATA_DIR = path.join(process.cwd(), ".data");
 const FILE_PATH = path.join(DATA_DIR, "global_leaderboard.json");
 
 const DUMMY_IDS = new Set(["eyang_rimba", "kapitan_botanis", "pakar_rimba"]);
@@ -37,7 +48,7 @@ function sanitizeEntries(entries: LeaderboardEntry[]): LeaderboardEntry[] {
   );
 }
 
-// In-memory fallback store
+// In-memory fallback store (development only; KV is the source of truth in production)
 let globalMemoryStore: LeaderboardEntry[] = [];
 
 function ensureDataDirExists() {
@@ -50,7 +61,7 @@ function ensureDataDirExists() {
   }
 }
 
-function readLeaderboardStore(): LeaderboardEntry[] {
+function readFileStore(): LeaderboardEntry[] {
   try {
     ensureDataDirExists();
     if (fs.existsSync(FILE_PATH)) {
@@ -69,7 +80,7 @@ function readLeaderboardStore(): LeaderboardEntry[] {
   return globalMemoryStore;
 }
 
-function saveLeaderboardStore(entries: LeaderboardEntry[]) {
+function writeFileStore(entries: LeaderboardEntry[]) {
   const cleaned = sanitizeEntries(entries);
   globalMemoryStore = cleaned;
   try {
@@ -78,6 +89,45 @@ function saveLeaderboardStore(entries: LeaderboardEntry[]) {
   } catch (e) {
     console.warn("⚠️ Failed to save global_leaderboard.json to filesystem:", e);
   }
+}
+
+// Read all entries. In production we use a KV hash keyed by entry id so that
+// concurrent writes from different users do not overwrite each other.
+async function readLeaderboardStore(): Promise<LeaderboardEntry[]> {
+  if (isKVConfigured) {
+    try {
+      const data = await kv.hgetall<Record<string, LeaderboardEntry>>(KV_KEY);
+      if (data && typeof data === "object") {
+        const values = Object.values(data).filter((v) => v && typeof v === "object");
+        return sanitizeEntries(values as LeaderboardEntry[]);
+      }
+      return [];
+    } catch (e) {
+      console.error("⚠️ Failed to read leaderboard from Vercel KV:", e);
+      // Fall through to file store on KV failure
+    }
+  }
+  return readFileStore();
+}
+
+// Merge one entry into the store atomically (per user id) without clobbering others.
+async function saveLeaderboardEntry(item: LeaderboardEntry) {
+  if (isKVConfigured) {
+    const key = item.id || item.email || "";
+    if (!key) return;
+    try {
+      const existing = await kv.hget<LeaderboardEntry>(KV_KEY, key);
+      const merged = mergeEntry(existing ?? undefined, item);
+      await kv.hset(KV_KEY, { [key]: merged });
+      return;
+    } catch (e) {
+      console.error("⚠️ Failed to save leaderboard entry to Vercel KV:", e);
+      // Fall through to file store on KV failure
+    }
+  }
+  const currentEntries = readFileStore();
+  const updatedList = mergeLeaderboardEntries(currentEntries, [item]);
+  writeFileStore(updatedList);
 }
 
 function sortLeaderboard(entries: LeaderboardEntry[]): LeaderboardEntry[] {
@@ -95,6 +145,55 @@ function sortLeaderboard(entries: LeaderboardEntry[]): LeaderboardEntry[] {
   });
 }
 
+// Merge a single incoming entry into an existing one, keeping the best stats.
+function mergeEntry(existing: LeaderboardEntry | undefined, item: LeaderboardEntry): LeaderboardEntry {
+  const base = existing || item;
+
+  // Keep highest score!
+  const bestScore = Math.max(existing?.score || 0, item.score || 0);
+  const bestCorrect = Math.max(existing?.totalCorrect || 0, item.totalCorrect || 0);
+  const bestAttempted = Math.max(existing?.totalAttempted || 0, item.totalAttempted || 0);
+  const bestFlora = Math.max(existing?.floraCount || 0, item.floraCount || 0);
+  const bestStreak = Math.max(existing?.maxStreak || 0, item.maxStreak || 0);
+  const bestTtsScore = Math.max(existing?.ttsScore || 0, item.ttsScore || 0);
+  const bestTtsCompleted = Math.max(existing?.ttsCompleted || 0, item.ttsCompleted || 0);
+
+  // Best duration (fastest time for best score)
+  let bestDuration = existing?.durationSeconds || 0;
+  if (item.durationSeconds > 0) {
+    if (item.score > (existing?.score || 0) || bestDuration === 0) {
+      bestDuration = item.durationSeconds;
+    } else if (item.score === (existing?.score || 0)) {
+      bestDuration = Math.min(bestDuration, item.durationSeconds);
+    }
+  }
+
+  const merged: LeaderboardEntry = {
+    ...base,
+    name: item.name || base.name,
+    email: item.email || base.email,
+    picture: item.picture || base.picture,
+    avatarType: item.avatarType || base.avatarType,
+    customAvatar: item.customAvatar || base.customAvatar,
+    title: item.title || base.title,
+    score: bestScore,
+    totalCorrect: bestCorrect,
+    totalAttempted: bestAttempted,
+    durationSeconds: bestDuration,
+    floraCount: bestFlora,
+    maxStreak: bestStreak,
+    ttsScore: bestTtsScore,
+    ttsCompleted: bestTtsCompleted,
+    updatedAt:
+      item.score > (existing?.score || 0) || (item.ttsScore || 0) > (existing?.ttsScore || 0)
+        ? "Baru saja"
+        : base.updatedAt,
+  };
+
+  return merged;
+}
+
+// Merge a full list (used by the local-file fallback path).
 function mergeLeaderboardEntries(current: LeaderboardEntry[], incoming: LeaderboardEntry[]): LeaderboardEntry[] {
   const result = [...current];
 
@@ -102,51 +201,12 @@ function mergeLeaderboardEntries(current: LeaderboardEntry[], incoming: Leaderbo
     if (!item || (!item.id && !item.email)) continue;
 
     const itemKey = item.id || item.email || "";
-
     const idx = result.findIndex(
       (e) => (itemKey && e.id === itemKey) || (item.email && e.email === item.email)
     );
 
     if (idx >= 0) {
-      const existing = result[idx];
-
-      // Keep highest score!
-      const bestScore = Math.max(existing.score, item.score || 0);
-      const bestCorrect = Math.max(existing.totalCorrect || 0, item.totalCorrect || 0);
-      const bestAttempted = Math.max(existing.totalAttempted || 0, item.totalAttempted || 0);
-      const bestFlora = Math.max(existing.floraCount || 0, item.floraCount || 0);
-      const bestStreak = Math.max(existing.maxStreak || 0, item.maxStreak || 0);
-      const bestTtsScore = Math.max(existing.ttsScore || 0, item.ttsScore || 0);
-      const bestTtsCompleted = Math.max(existing.ttsCompleted || 0, item.ttsCompleted || 0);
-
-      // Best duration (fastest time for best score)
-      let bestDuration = existing.durationSeconds;
-      if (item.durationSeconds > 0) {
-        if (item.score > existing.score || existing.durationSeconds === 0) {
-          bestDuration = item.durationSeconds;
-        } else if (item.score === existing.score) {
-          bestDuration = Math.min(existing.durationSeconds, item.durationSeconds);
-        }
-      }
-
-      result[idx] = {
-        ...existing,
-        name: item.name || existing.name,
-        email: item.email || existing.email,
-        picture: item.picture || existing.picture,
-        avatarType: item.avatarType || existing.avatarType,
-        customAvatar: item.customAvatar || existing.customAvatar,
-        title: item.title || existing.title,
-        score: bestScore,
-        totalCorrect: bestCorrect,
-        totalAttempted: bestAttempted,
-        durationSeconds: bestDuration,
-        floraCount: bestFlora,
-        maxStreak: bestStreak,
-        ttsScore: bestTtsScore,
-        ttsCompleted: bestTtsCompleted,
-        updatedAt: item.score > existing.score || (item.ttsScore || 0) > (existing.ttsScore || 0) ? "Baru saja" : existing.updatedAt,
-      };
+      result[idx] = mergeEntry(result[idx], item);
     } else {
       result.push(item);
     }
@@ -158,7 +218,7 @@ function mergeLeaderboardEntries(current: LeaderboardEntry[], incoming: Leaderbo
 // ─── GET /api/leaderboard ───────────────────────────────────────────────────
 export async function GET() {
   try {
-    const entries = readLeaderboardStore();
+    const entries = await readLeaderboardStore();
     const sorted = sortLeaderboard(entries);
     return NextResponse.json({ entries: sorted });
   } catch (error) {
@@ -181,10 +241,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Data entri leaderboard tidak valid" }, { status: 400 });
     }
 
-    const currentEntries = readLeaderboardStore();
-    const updatedList = mergeLeaderboardEntries(currentEntries, incomingList);
-    saveLeaderboardStore(updatedList);
+    for (const item of incomingList) {
+      if (!item || (!item.id && !item.email)) continue;
+      await saveLeaderboardEntry(item);
+    }
 
+    const updatedList = sortLeaderboard(await readLeaderboardStore());
     return NextResponse.json({ success: true, entries: updatedList });
   } catch (error) {
     console.error("Error in POST /api/leaderboard:", error);

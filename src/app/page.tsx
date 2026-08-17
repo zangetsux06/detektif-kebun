@@ -185,6 +185,8 @@ export default function HomePage() {
   const [introStep, setIntroStep]         = useState(0);
   const [selectedModeStep, setSelectedModeStep] = useState<"mode_select" | "difficulty_select">("mode_select");
   const [score, setScore]                 = useState(0);
+  const [ttsScore, setTtsScore]           = useState(0);
+  const [ttsCompleted, setTtsCompleted]   = useState(0);
   const [streak, setStreak]               = useState(0);
   const [totalCorrect, setTotalCorrect]   = useState(0);
   const [totalAttempted, setTotalAttempted] = useState(0);
@@ -222,10 +224,14 @@ export default function HomePage() {
   const [showGoogleConfigModal, setShowGoogleConfigModal] = useState(false);
   const [showLeaderboardModal, setShowLeaderboardModal] = useState(false);
   const [showTTSModal, setShowTTSModal] = useState(false);
+  const [ttsSessionKey, setTtsSessionKey] = useState(0);
   const [leaderboardEntries, setLeaderboardEntries] = useState<LeaderboardEntry[]>(DEFAULT_INITIAL_LEADERBOARD);
 
   const handleTTSScoreEarned = useCallback((earnedScore: number) => {
-    setScore((p) => p + earnedScore);
+    // TTS score is tracked separately (its own leaderboard tab), NOT added to
+    // the main Riddles score.
+    setTtsScore((p) => p + earnedScore);
+    setTtsCompleted((p) => p + 1);
   }, []);
   const [sessionDuration, setSessionDuration] = useState(0);
   const [customClientIdInput, setCustomClientIdInput] = useState("");
@@ -891,6 +897,8 @@ export default function HomePage() {
         durationSeconds: activeDuration,
         floraCount: activeFloraCount,
         maxStreak: streak,
+        ttsScore,
+        ttsCompleted,
         updatedAt: "Baru saja",
       };
 
@@ -908,7 +916,7 @@ export default function HomePage() {
         })
         .catch((err) => console.warn("Error posting to global leaderboard:", err));
     },
-    [score, totalCorrect, totalAttempted, sessionDuration, discoveredGallery.length, userProfile, calculateTitle, streak]
+    [score, totalCorrect, totalAttempted, sessionDuration, discoveredGallery.length, userProfile, calculateTitle, streak, ttsScore, ttsCompleted]
   );
 
   // Update stats in localStorage on change
@@ -1912,7 +1920,10 @@ export default function HomePage() {
 
                         {/* MODE 2: KISI-KISI SILANG BOTANI */}
                         <button
-                          onClick={() => setShowTTSModal(true)}
+                          onClick={() => {
+                            setTtsSessionKey((k) => k + 1);
+                            setShowTTSModal(true);
+                          }}
                           className="group relative flex flex-col items-center gap-3 px-6 py-6 border-4 border-pixel-wood cursor-pointer active:translate-y-1.5 transition-all text-center"
                           style={{
                             fontFamily: "var(--font-title)",
@@ -3027,6 +3038,7 @@ export default function HomePage() {
 
       {/* ── TTS Flora Modal ───────────────────────────────────────────── */}
       <TTSFloraModal
+        key={ttsSessionKey}
         open={showTTSModal}
         onClose={() => setShowTTSModal(false)}
         onScoreEarned={handleTTSScoreEarned}

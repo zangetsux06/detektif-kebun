@@ -10,7 +10,6 @@ import {
   Trophy,
   ChevronLeft,
   ChevronRight,
-  BookOpen,
   Sparkles,
   Lock,
   AlertTriangle
@@ -32,22 +31,83 @@ function scrubPlantSpoiler(text: string, plantName: string): string {
   return text.replace(regex, "tanaman ini");
 }
 
+// ─── Persistent Progress (localStorage) ───────────────────────────────────
+const TTS_STORAGE_KEY = "detektif_kebun_tts_progress";
+
+interface TTSPersistedProgress {
+  inputs: Record<string, Record<string, string>>;
+  completedLevels: Record<string, boolean>;
+}
+
+function loadTTSPersistedProgress(): TTSPersistedProgress {
+  if (typeof window === "undefined") {
+    return { inputs: {}, completedLevels: {} };
+  }
+  try {
+    const raw = localStorage.getItem(TTS_STORAGE_KEY);
+    if (!raw) return { inputs: {}, completedLevels: {} };
+    const parsed = JSON.parse(raw);
+    return {
+      inputs: (parsed && typeof parsed.inputs === "object" && parsed.inputs) || {},
+      completedLevels: (parsed && typeof parsed.completedLevels === "object" && parsed.completedLevels) || {},
+    };
+  } catch (e) {
+    console.warn("Gagal mem-parse progres TTS dari localStorage", e);
+    return { inputs: {}, completedLevels: {} };
+  }
+}
+
+function saveTTSPersistedProgress(
+  inputs: Record<string, Record<string, string>>,
+  completedLevels: Record<string, boolean>,
+): void {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(
+      TTS_STORAGE_KEY,
+      JSON.stringify({ inputs, completedLevels }),
+    );
+  } catch (e) {
+    console.warn("Gagal menyimpan progres TTS ke localStorage", e);
+  }
+}
+
 export default function TTSFloraModal({ open, onClose, onScoreEarned }: TTSFloraModalProps) {
-  const [currentLevelIndex, setCurrentLevelIndex] = useState(0);
+  // Read persisted progress once on mount (component is remounted per open via `key`).
+  const [persisted] = useState(() => loadTTSPersistedProgress());
+
+  // Random starting level is chosen once per mount.
+  const [currentLevelIndex, setCurrentLevelIndex] = useState(
+    () => Math.floor(Math.random() * TTS_LEVELS.length),
+  );
   const currentLevel: TTSLevel = TTS_LEVELS[currentLevelIndex] || TTS_LEVELS[0];
 
   // Map to store inputs per level ID: levelId -> Record<`${row}_${col}`, string>
-  const [levelProgressMap, setLevelProgressMap] = useState<Record<string, Record<string, string>>>({});
-  
-  // Current active grid inputs for current level
-  const [gridInputs, setGridInputs] = useState<Record<string, string>>({});
-  const [selectedCell, setSelectedCell] = useState<{ row: number; col: number } | null>(null);
-  const [activeDirection, setActiveDirection] = useState<"across" | "down">("across");
+  const [levelProgressMap, setLevelProgressMap] = useState<Record<string, Record<string, string>>>(persisted.inputs);
+  // Map to track completed levels (persisted)
+  const [completedLevels, setCompletedLevels] = useState<Record<string, boolean>>(persisted.completedLevels);
+  // Map to store timer per level ID (so speed bonus is fair per level)
+  const [timerPerLevel, setTimerPerLevel] = useState<Record<string, number>>({});
+  // Map to store hints remaining per level ID (reset to 3 when a new level is opened)
+  const [hintsPerLevel, setHintsPerLevel] = useState<Record<string, number>>({});
 
-  const [timerSeconds, setTimerSeconds] = useState(0);
-  const [hintsLeft, setHintsLeft] = useState(3);
+  // Current active grid inputs for current level (restore saved inputs)
+  const [gridInputs, setGridInputs] = useState<Record<string, string>>(
+    () => persisted.inputs[currentLevel.id] || {},
+  );
+  const [selectedCell, setSelectedCell] = useState<{ row: number; col: number } | null>(
+    () => (currentLevel.clues.length > 0 ? { row: currentLevel.clues[0].row, col: currentLevel.clues[0].col } : null),
+  );
+  const [activeDirection, setActiveDirection] = useState<"across" | "down">(
+    () => (currentLevel.clues.length > 0 ? currentLevel.clues[0].direction : "across"),
+  );
+
   const [isCompleted, setIsCompleted] = useState(false);
   const [earnedScore, setEarnedScore] = useState(0);
+
+  // Derived per-level values (kept in maps so switching level resets them)
+  const timerSeconds = timerPerLevel[currentLevel.id] || 0;
+  const hintsLeft = hintsPerLevel[currentLevel.id] ?? 3;
 
   // Double validation confirmation modals
   const [showExitConfirm, setShowExitConfirm] = useState(false);
@@ -61,6 +121,7 @@ export default function TTSFloraModal({ open, onClose, onScoreEarned }: TTSFlora
     setGridInputs(savedInputs);
     setSelectedCell(null);
     setIsCompleted(false);
+    setEarnedScore(0);
     setShowExitConfirm(false);
     setShowResetConfirm(false);
 
@@ -70,19 +131,6 @@ export default function TTSFloraModal({ open, onClose, onScoreEarned }: TTSFlora
       setActiveDirection(firstClue.direction);
     }
   }, []);
-
-  // On modal open, pick random level or reset session progress map
-  useEffect(() => {
-    if (open) {
-      const randomIndex = Math.floor(Math.random() * TTS_LEVELS.length);
-      setCurrentLevelIndex(randomIndex);
-      setLevelProgressMap({});
-      setTimerSeconds(0);
-      setHintsLeft(3);
-      setEarnedScore(0);
-      loadLevel(randomIndex, {});
-    }
-  }, [open, loadLevel]);
 
   // Switch Level with Progress Save (Drawback / Level Browsing)
   const handleSwitchLevel = (nextLevelIdx: number) => {
@@ -98,14 +146,23 @@ export default function TTSFloraModal({ open, onClose, onScoreEarned }: TTSFlora
     loadLevel(nextLevelIdx, updatedMap);
   };
 
-  // Timer Effect
+  // Timer Effect (per level: starts fresh at 0 for each level)
   useEffect(() => {
     if (!open || isCompleted) return;
     const interval = setInterval(() => {
-      setTimerSeconds((prev) => prev + 1);
+      setTimerPerLevel((prev) => ({
+        ...prev,
+        [currentLevel.id]: (prev[currentLevel.id] || 0) + 1,
+      }));
     }, 1000);
     return () => clearInterval(interval);
-  }, [open, isCompleted]);
+  }, [open, isCompleted, currentLevel.id]);
+
+  // Persist progress (inputs + completed levels) to localStorage whenever it changes
+  useEffect(() => {
+    if (!open) return;
+    saveTTSPersistedProgress(levelProgressMap, completedLevels);
+  }, [open, levelProgressMap, completedLevels]);
 
   // Build grid layout metadata
   const validCells = useMemo(() => {
@@ -170,8 +227,12 @@ export default function TTSFloraModal({ open, onClose, onScoreEarned }: TTSFlora
     return cellData.acrossClue || cellData.downClue || currentLevel.clues[0];
   }, [selectedCell, activeDirection, validCells, currentLevel]);
 
-  // Check completion
-  const checkCompletion = useCallback((inputs: Record<string, string>) => {
+  // Check completion — accepts explicit hints/timer values to avoid stale closure reads
+  const checkCompletion = useCallback((
+    inputs: Record<string, string>,
+    hintsRemaining: number,
+    elapsedSeconds: number,
+  ) => {
     const allKeys = Object.keys(validCells);
     if (allKeys.length === 0) return false;
 
@@ -184,18 +245,20 @@ export default function TTSFloraModal({ open, onClose, onScoreEarned }: TTSFlora
 
     if (correctCount === allKeys.length) {
       const baseScore = 300;
-      const speedBonus = Math.max(0, 150 - timerSeconds);
-      const totalScore = baseScore + speedBonus + hintsLeft * 25;
+      const speedBonus = Math.max(0, 150 - elapsedSeconds);
+      const totalScore = baseScore + speedBonus + hintsRemaining * 25;
 
       setEarnedScore(totalScore);
       setIsCompleted(true);
-      if (onScoreEarned) {
+      setCompletedLevels((prev) => ({ ...prev, [currentLevel.id]: true }));
+      // Only award score once per level (guard against replay/reset re-awarding).
+      if (onScoreEarned && !completedLevels[currentLevel.id]) {
         onScoreEarned(totalScore);
       }
       return true;
     }
     return false;
-  }, [validCells, timerSeconds, hintsLeft, onScoreEarned]);
+  }, [validCells, currentLevel.id, completedLevels, onScoreEarned]);
 
   // Key press handler with Auto-Advance in Down/Across direction & Locked Cell Protection
   const handleInputLetter = useCallback((char: string) => {
@@ -217,10 +280,11 @@ export default function TTSFloraModal({ open, onClose, onScoreEarned }: TTSFlora
     }
 
     // Auto-advance focus to next cell along activeDirection (down or across)
-    let curRow = selectedCell.row;
-    let curCol = selectedCell.col;
+    const curRow = selectedCell.row;
+    const curCol = selectedCell.col;
 
-    for (let step = 1; step <= 10; step++) {
+    const maxSteps = (activeClue?.answer.length ?? 1) + 1;
+    for (let step = 1; step <= maxSteps; step++) {
       const nextRow = activeDirection === "down" ? curRow + step : curRow;
       const nextCol = activeDirection === "across" ? curCol + step : curCol;
       const nextKey = `${nextRow}_${nextCol}`;
@@ -235,8 +299,8 @@ export default function TTSFloraModal({ open, onClose, onScoreEarned }: TTSFlora
       }
     }
 
-    checkCompletion(newInputs);
-  }, [selectedCell, isCompleted, validCells, gridInputs, activeDirection, lockedCellKeys, currentLevel, checkCompletion]);
+    checkCompletion(newInputs, hintsLeft, timerSeconds);
+  }, [selectedCell, isCompleted, validCells, gridInputs, activeDirection, lockedCellKeys, currentLevel, activeClue, hintsLeft, timerSeconds, checkCompletion]);
 
   // Backspace Handler with Locked Cell Protection & Backwards Navigation
   const handleBackspace = useCallback(() => {
@@ -252,10 +316,11 @@ export default function TTSFloraModal({ open, onClose, onScoreEarned }: TTSFlora
         [currentLevel.id]: newInputs
       }));
     } else {
-      let curRow = selectedCell.row;
-      let curCol = selectedCell.col;
+      const curRow = selectedCell.row;
+      const curCol = selectedCell.col;
 
-      for (let step = 1; step <= 10; step++) {
+      const maxSteps = (activeClue?.answer.length ?? 1) + 1;
+      for (let step = 1; step <= maxSteps; step++) {
         const prevRow = activeDirection === "down" ? curRow - step : curRow;
         const prevCol = activeDirection === "across" ? curCol - step : curCol;
         const prevKey = `${prevRow}_${prevCol}`;
@@ -277,7 +342,7 @@ export default function TTSFloraModal({ open, onClose, onScoreEarned }: TTSFlora
         }
       }
     }
-  }, [selectedCell, isCompleted, gridInputs, activeDirection, validCells, lockedCellKeys, currentLevel]);
+  }, [selectedCell, isCompleted, gridInputs, activeDirection, validCells, lockedCellKeys, currentLevel, activeClue]);
 
   // Handle Physical Keyboard Event
   useEffect(() => {
@@ -311,13 +376,17 @@ export default function TTSFloraModal({ open, onClose, onScoreEarned }: TTSFlora
     if (!cellData) return;
 
     const newInputs = { ...gridInputs, [key]: cellData.letter };
+    const hintsRemaining = hintsLeft - 1;
     setGridInputs(newInputs);
     setLevelProgressMap((prev) => ({
       ...prev,
       [currentLevel.id]: newInputs
     }));
-    setHintsLeft((prev) => prev - 1);
-    checkCompletion(newInputs);
+    setHintsPerLevel((prev) => ({
+      ...prev,
+      [currentLevel.id]: hintsRemaining,
+    }));
+    checkCompletion(newInputs, hintsRemaining, timerSeconds);
   };
 
   // Cell Click Handler with Smart Direction Auto-Select
@@ -349,14 +418,29 @@ export default function TTSFloraModal({ open, onClose, onScoreEarned }: TTSFlora
     }
   };
 
+  // Reset current level board, timer and hints (used by both quick and confirmed reset)
+  const resetCurrentLevel = useCallback(() => {
+    setGridInputs({});
+    setLevelProgressMap((prev) => ({
+      ...prev,
+      [currentLevel.id]: {}
+    }));
+    setTimerPerLevel((prev) => ({
+      ...prev,
+      [currentLevel.id]: 0,
+    }));
+    setHintsPerLevel((prev) => ({
+      ...prev,
+      [currentLevel.id]: 3,
+    }));
+    setIsCompleted(false);
+    setEarnedScore(0);
+  }, [currentLevel.id]);
+
   // Attempt Reset with Double Validation
   const handleAttemptReset = () => {
     if (Object.keys(gridInputs).length === 0) {
-      setGridInputs({});
-      setLevelProgressMap((prev) => ({
-        ...prev,
-        [currentLevel.id]: {}
-      }));
+      resetCurrentLevel();
     } else {
       setShowResetConfirm(true);
     }
@@ -773,11 +857,7 @@ export default function TTSFloraModal({ open, onClose, onScoreEarned }: TTSFlora
                   <button
                     onClick={() => {
                       setShowResetConfirm(false);
-                      setGridInputs({});
-                      setLevelProgressMap((prev) => ({
-                        ...prev,
-                        [currentLevel.id]: {}
-                      }));
+                      resetCurrentLevel();
                     }}
                     className="flex-1 py-2.5 bg-[#93000a] hover:bg-[#ffb4ab] hover:text-black text-[#ece2c1] font-bold text-xs border-2 border-[#ffdad6] cursor-pointer uppercase transition-all"
                   >
