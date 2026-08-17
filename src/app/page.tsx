@@ -46,9 +46,9 @@ import LeaderboardModal, {
   LeaderboardEntry,
   DEFAULT_INITIAL_LEADERBOARD,
 } from "@/components/LeaderboardModal";
-import EyangClueImg from "@/assets/Eyang_Time_Stop.png";
-import EyangNyawaImg from "@/assets/Eyang_Nyawa.png";
-import EyangTimeStopImg from "@/assets/Eyang_Clue.png";
+import EyangClueImg from "@/assets/Eyang_Time_Stop.webp";
+import EyangNyawaImg from "@/assets/Eyang_Nyawa.webp";
+import EyangTimeStopImg from "@/assets/Eyang_Clue.webp";
 
 const ForestBackground = dynamic(() => import("@/components/ForestBackground"), { ssr: false });
 
