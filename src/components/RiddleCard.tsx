@@ -325,6 +325,10 @@ export default function RiddleCard({
   const [localAttempts, setLocalAttempts] = useState(0);
   const attempts = onUpdateAttempts ? attemptsProp : localAttempts;
   const setAttempts = onUpdateAttempts || setLocalAttempts;
+  const attemptsRef = useRef(attempts);
+  useEffect(() => {
+    attemptsRef.current = attempts;
+  }, [attempts]);
   const [questionAttempts, setQuestionAttempts] = useState(0);
   const [lastWrong, setLastWrong] = useState(false);
   const [isGameOver, setIsGameOver] = useState(false);
@@ -336,6 +340,8 @@ export default function RiddleCard({
   const btnRef = useRef<HTMLButtonElement>(null);
 
   const [timeLeft, setTimeLeft] = useState(gameMode === "hard" ? 30 : 60);
+  const deadlineRef = useRef<number>(0);
+  const freezeUntilRef = useRef<number>(0);
 
   const maxLives = (gameMode === "hard" ? 2 : 3) + extraLivesSession;
   const currentLives = maxLives - attempts;
@@ -362,7 +368,7 @@ export default function RiddleCard({
         "sad",
       );
     } else {
-      const nextAttempts = attempts + 1;
+      const nextAttempts = attemptsRef.current + 1;
       setAttempts(nextAttempts);
       setQuestionAttempts((q) => q + 1);
       setLastWrong(true);
@@ -392,7 +398,7 @@ export default function RiddleCard({
         setTimeLeft(60);
       }
     }
-  }, [riddleData?.encodedPlant, gameMode, setAttempts, maxLives, onResetStreak, onAnswerResult, onEyangMessage, attempts]);
+  }, [riddleData?.encodedPlant, gameMode, setAttempts, maxLives, onResetStreak, onAnswerResult, onEyangMessage]);
 
   const handleTimeoutRef = useRef(handleTimeout);
   useEffect(() => {
@@ -401,20 +407,42 @@ export default function RiddleCard({
 
   const currentRiddleIdRef = useRef<string | null>(null);
 
-  // Timer Tick Effect
+  // Reset deadline when a new riddle arrives
   useEffect(() => {
-    if (gameMode === "easy" || isTimeStoppedForNextQuestion || isCorrect || isGameOver || isLoading || !riddleData) {
+    if (!riddleData) return;
+    if (currentRiddleIdRef.current === riddleData.id) return;
+    currentRiddleIdRef.current = riddleData.id;
+    const duration = gameMode === "hard" ? 30 : 60;
+    deadlineRef.current = Date.now() + duration * 1000;
+    setTimeLeft(duration);
+  }, [riddleData, gameMode]);
+
+  // Freeze timer for 30s when Time Stop is active (instead of pausing forever)
+  useEffect(() => {
+    if (!isTimeStoppedForNextQuestion || !riddleData) return;
+    if (currentRiddleIdRef.current !== riddleData.id) return;
+    freezeUntilRef.current = Date.now() + 30 * 1000;
+    deadlineRef.current = Math.max(deadlineRef.current + 30 * 1000, Date.now() + 30 * 1000);
+  }, [isTimeStoppedForNextQuestion, riddleData]);
+
+  // Timer Tick Effect (deadline-based to avoid browser throttling drift)
+  useEffect(() => {
+    if (gameMode === "easy" || isCorrect || isGameOver || isLoading || !riddleData) {
       return;
     }
 
     const interval = setInterval(() => {
-      setTimeLeft((prev) => (prev > 0 ? prev - 1 : 0));
-    }, 1000);
+      const now = Date.now();
+      const frozen = now < freezeUntilRef.current;
+      if (frozen) return;
+      const remaining = Math.max(0, Math.ceil((deadlineRef.current - now) / 1000));
+      setTimeLeft(remaining);
+    }, 250);
 
     return () => {
       clearInterval(interval);
     };
-  }, [riddleData, isCorrect, isGameOver, isLoading, gameMode, isTimeStoppedForNextQuestion]);
+  }, [riddleData, isCorrect, isGameOver, isLoading, gameMode]);
 
   // Trigger timeout logic safely outside rendering
   useEffect(() => {
@@ -530,6 +558,7 @@ export default function RiddleCard({
         body: JSON.stringify({
           answer: trimmedAnswer,
           encodedPlant: riddleData.encodedPlant,
+          riddleId: riddleData.id,
         }),
       });
       const result: CheckResult = await res.json();

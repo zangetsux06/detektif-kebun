@@ -5,12 +5,13 @@ import { LOCAL_RIDDLES } from "@/lib/riddles";
 interface CheckAnswerRequest {
   answer: string;
   encodedPlant: string;
+  riddleId?: string;
 }
 
 export async function POST(request: NextRequest) {
   try {
     const body: CheckAnswerRequest = await request.json();
-    const { answer, encodedPlant } = body;
+    const { answer, encodedPlant, riddleId } = body;
 
     if (!answer || !encodedPlant) {
       return NextResponse.json(
@@ -21,6 +22,8 @@ export async function POST(request: NextRequest) {
 
     const plantName = Buffer.from(encodedPlant, "base64").toString("utf-8");
     const cleanAnswer = answer.trim().toLowerCase();
+    // riddleId is forwarded from the client for traceability (not used for scoring here)
+    void riddleId;
     const cleanPlantName = plantName.toLowerCase();
 
     // Reject answers shorter than 4 characters
